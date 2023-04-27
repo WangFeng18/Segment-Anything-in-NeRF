@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>SAM-NeRF</title>
+	<style>
+		#image-container {
+			position: relative;
+			width: 500px;
+			height: 500px;
+			border: 1px solid black;
+			background-image: url('your-image.jpg');
+			background-size: cover;
+		}
+
+		#image {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			opacity: 0;
+			cursor: crosshair;
+		}
+	</style>
+</head>
+<body>
+	<div id="image-container">
+		<img id="image" src="">
+	</div>
+
+	<script>
+		var imageContainer = document.getElementById('image-container');
+		var image = document.getElementById('image');
+
+		imageContainer.addEventListener('mousemove', function(event) {
+			var x = event.pageX - this.offsetLeft;
+			var y = event.pageY - this.offsetTop;
+			console.log('相对位置：x=' + x + ', y=' + y);
+		});
+
+		image.addEventListener('load', function() {
+			image.style.opacity = 1;
+		});
+
+		image.src = 'your-image.jpg';
+	</script>
+</body>
+</html>
