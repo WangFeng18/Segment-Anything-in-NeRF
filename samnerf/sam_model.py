@@ -243,7 +243,15 @@ class SAMModel(NerfactoModel):
         return param_groups
 
     @torch.no_grad()
-    def get_outputs_for_camera_ray_bundle(self, camera_ray_bundle: RayBundle, points=None, text_prompt=None, fast=True):
+    def get_outputs_for_camera_ray_bundle(
+        self,
+        camera_ray_bundle: RayBundle,
+        points=None,
+        text_prompt=None,
+        topk: int = 5,
+        thresh: float = 0.5,
+        fast=True,
+    ):
         """Takes in camera parameters and computes the output of the model.
 
         Args:
@@ -364,8 +372,8 @@ class SAMModel(NerfactoModel):
             msk_img = self.lang_sam.set_and_segment(
                 (outputs["rgb"].cpu().numpy() * 255).astype(np.uint8),
                 prompt,
-                pts=5,
-                thres=0.5,
+                pts=topk,
+                thres=thresh,
                 points=input_points,
                 output_format="tensor",
             ).to(outputs["rgb"])
