@@ -317,20 +317,7 @@ class VanillaPipeline(Pipeline):
         # print(batch.keys())
         # print(batch["image_idx"].shape)
         print(batch["image"].shape)
-
-        # debug
-        points = np.array([[0.5, 0.5]])
-        print("\n\ndebug\n\n")
-        intrin = np.array([[0, 0], [0, 0]])
-        cam = self.datamanager.eval_dataset.cameras
-        intrin[0, 0] = cam.fx[0, 0].item()
-        intrin[1, 1] = cam.fy[0, 0].item()
-        intrin[0, 2] = cam.cx[0, 0].item()
-        intrin[1, 2] = cam.cy[0, 0].item()
-        
-        c2w = self.datamanager.eval_dataset.cameras.camera_to_worlds[image_idx]
-        
-        outputs = self.model.get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrin, c2w=c2w)
+        outputs = self.model.get_outputs_for_camera_ray_bundle(camera_ray_bundle)
         metrics_dict, images_dict = self.model.get_image_metrics_and_images(outputs, batch)
         assert "image_idx" not in metrics_dict
         metrics_dict["image_idx"] = image_idx

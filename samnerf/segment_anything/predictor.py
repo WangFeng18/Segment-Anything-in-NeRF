@@ -35,7 +35,7 @@ class SamPredictor:
 
     def set_image(
         self,
-        image: np.ndarray,
+        image,
         image_format: str = "RGB",
     ) -> None:
         """
@@ -55,9 +55,17 @@ class SamPredictor:
             image = image[..., ::-1]
 
         # Transform the image to the form expected by the model
-        input_image = self.transform.apply_image(image)
-        input_image_torch = torch.as_tensor(input_image, device=self.device)
-        input_image_torch = input_image_torch.permute(2, 0, 1).contiguous()[None, :, :, :]
+        if isinstance(image, np.ndarray):
+            input_image = self.transform.apply_image(image)
+            input_image_torch = torch.as_tensor(input_image, device=self.device)
+            input_image_torch = input_image_torch.permute(2, 0, 1).contiguous()[None, :, :, :]
+        else:
+            input_image_torch = (
+                self.transform.apply_image_torch(image.permute(2, 0, 1).unsqueeze(dim=0)).to(self.device).contiguous()
+            )
+        print("========")
+        print(input_image_torch.float().mean())
+        print("========")
 
         self.set_torch_image(input_image_torch, image.shape[:2])
 
@@ -88,10 +96,7 @@ class SamPredictor:
         self.original_size = original_image_size
         self.input_size = tuple(transformed_image.shape[-2:])
         input_image = self.model.preprocess(transformed_image)
-        _t = time.time()
         self.features = self.model.image_encoder(input_image)
-        print(self.features.shape)
-        print(time.time() - _t)
         self.is_image_set = True
 
     @torch.no_grad()
@@ -132,6 +137,7 @@ class SamPredictor:
         mask_input: Optional[np.ndarray] = None,
         multimask_output: bool = True,
         return_logits: bool = False,
+        return_torch: bool = False,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Predict masks for the given input prompts, using the currently set image.
@@ -193,10 +199,12 @@ class SamPredictor:
             return_logits=return_logits,
         )
 
-        masks_np = masks[0].detach().cpu().numpy()
-        iou_predictions_np = iou_predictions[0].detach().cpu().numpy()
-        low_res_masks_np = low_res_masks[0].detach().cpu().numpy()
-        return masks_np, iou_predictions_np, low_res_masks_np
+        if not return_torch:
+            masks_np = masks[0].detach().cpu().numpy()
+            iou_predictions_np = iou_predictions[0].detach().cpu().numpy()
+            low_res_masks_np = low_res_masks[0].detach().cpu().numpy()
+            return masks_np, iou_predictions_np, low_res_masks_np
+        return masks, iou_predictions, low_res_masks
 
     @torch.no_grad()
     def predict_torch(

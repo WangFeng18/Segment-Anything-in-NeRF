@@ -31,11 +31,13 @@ class SAMField(Field):
         hidden_layers=2,
         spatial_distortion: SpatialDistortion = SceneContraction(),
         use_dino_features: bool = False,
+        use_clipseg_features: bool = False,
     ):
         super().__init__()
         assert len(grid_layers) == len(grid_sizes) and len(grid_resolutions) == len(grid_layers)
         self.spatial_distortion = spatial_distortion
         self.use_dino_features = use_dino_features
+        self.use_clipseg_features = use_clipseg_features
         self.clip_encs = torch.nn.ModuleList(
             [
                 SAMField._get_encoding(
@@ -69,6 +71,27 @@ class SAMField(Field):
                     "n_hidden_layers": 1,
                 },
             )
+        if self.use_clipseg_features:
+            self.clipseg_encs = torch.nn.ModuleList(
+                [
+                    SAMField._get_encoding(
+                        grid_resolutions[i][0], grid_resolutions[i][1], grid_layers[i], indim=3, hash_size=grid_sizes[i]
+                    )
+                    for i in range(len(grid_layers))
+                ]
+            )
+            tot_cs_out_dims = sum([e.n_output_dims for e in self.clipseg_encs])
+            self.clipseg_net = tcnn.Network(
+                n_input_dims=tot_cs_out_dims,
+                n_output_dims=192,
+                network_config={
+                    "otype": "CutlassMLP",
+                    "activation": "ReLU",
+                    "output_activation": "None",
+                    "n_neurons": 256,
+                    "n_hidden_layers": 1,
+                },
+            )
 
     @staticmethod
     def _get_encoding(start_res, end_res, levels, indim=3, hash_size=19):
@@ -86,7 +109,7 @@ class SAMField(Field):
         )
         return enc
 
-    def get_outputs(self, ray_samples: RaySamples):
+    def get_outputs(self, ray_samples: RaySamples, get_feautre=["sam", "dino", "clipseg"]):
         # random scales, one scale
         outputs = {}
 
@@ -94,15 +117,25 @@ class SAMField(Field):
         positions = self.spatial_distortion(positions)
         positions = (positions + 2.0) / 4.0
 
-        xs = [e(positions.view(-1, 3)) for e in self.clip_encs]
-        x = torch.concat(xs, dim=-1)
+        if "sam" in get_feautre or "dino" in get_feautre:
+            xs = [e(positions.view(-1, 3)) for e in self.clip_encs]
+            x = torch.concat(xs, dim=-1)
 
-        outputs["hashgrid"] = x.view(*ray_samples.frustums.shape, -1)
-        sam_pass = self.sam_net(x).view(*ray_samples.frustums.shape, -1)
-        outputs["sam"] = sam_pass
-        if self.use_dino_features:
+            outputs["hashgrid"] = x.view(*ray_samples.frustums.shape, -1)
+
+        if "sam" in get_feautre:
+            sam_pass = self.sam_net(x).view(*ray_samples.frustums.shape, -1)
+            outputs["sam"] = sam_pass
+
+        if self.use_dino_features and "dino" in get_feautre:
             dino_pass = self.dino_net(x).view(*ray_samples.frustums.shape, -1)
             outputs["dino"] = dino_pass
+
+        if self.use_clipseg_features and "clipseg" in get_feautre:
+            xc = [e(positions.view(-1, 3)) for e in self.clipseg_encs]
+            xc = torch.concat(xc, dim=-1)
+            clipseg_pass = self.clipseg_net(xc).view(*ray_samples.frustums.shape, -1)
+            outputs["clipseg"] = clipseg_pass
 
         return outputs
 

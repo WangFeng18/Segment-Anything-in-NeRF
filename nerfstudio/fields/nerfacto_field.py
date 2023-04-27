@@ -106,14 +106,14 @@ class TCNNNerfactoField(Field):
         hidden_dim_transient: int = 64,
         appearance_embedding_dim: int = 32,
         transient_embedding_dim: int = 16,
-        use_transient_embedding: bool = True,
+        use_transient_embedding: bool = False,
         use_semantics: bool = False,
         num_semantic_classes: int = 100,
         pass_semantic_gradients: bool = False,
         use_pred_normals: bool = False,
         use_average_appearance_embedding: bool = False,
         spatial_distortion: SpatialDistortion = None,
-        use_appearance_embedding: bool = True,
+        use_appearance_embedding: bool = False,
     ) -> None:
         super().__init__()
 

@@ -80,10 +80,10 @@ descriptions = {
     "nerfplayer-ngp": "NeRFPlayer with InstantNGP backbone.",
 }
 
-method_configs["sam_nerf16_garden"] = TrainerConfig(
+method_configs["sam_nerf16_flamesalmon_no_distill"] = TrainerConfig(
     method_name="sam_nerf16_garden",
     steps_per_eval_batch=500,
-    steps_per_eval_image=50,
+    # steps_per_eval_image=10,
     steps_per_save=2000,
     max_num_iterations=30000,
     mixed_precision=True,
@@ -91,10 +91,530 @@ method_configs["sam_nerf16_garden"] = TrainerConfig(
         datamanager=SAMDataManagerConfig(
             dataparser=NerfstudioDataParserConfig(
                 # downscale_factor
-                train_split_fraction=184/185,
                 scale_factor=1.0,
                 train_val_json_split=True,
-                data=Path("/data/machine/data/mipnerf360/garden_debug/"),
+                data=Path("/data/machine/data/flame_salmon_image/"),
+            ),
+            use_dino_feature=False,
+            train_num_rays_per_batch=4096 * 4,
+            eval_num_rays_per_batch=4096 * 4,
+            camera_optimizer=CameraOptimizerConfig(
+                mode="off",
+            ),
+            patch_size=4,
+            sam_feature_path="/data/machine/data/flame_salmon_image/sam_features/",
+            use_clipseg_feature=True,
+        ),
+        model=SAMModelConfig(
+            distill_sam=False,
+            kernel_size=3,
+            use_clipseg_feature=True,
+            eval_num_rays_per_chunk=1 << 15,
+            use_appearance_embedding=False,
+            hidden_layers=1,
+            patch_size=4,
+            sam_loss_weight=1.0,
+            num_proposal_iterations=1,
+            num_proposal_samples_per_ray=(64,),
+            num_sam_samples=3,
+            num_nerf_samples_per_ray=32,
+        ),
+    ),
+    optimizers={
+        "proposal_networks": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "fields": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+    },
+    viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
+    vis="viewer+wandb",
+)
+
+method_configs["sam_nerf16_flamesalmon_clipseg_lr2"] = TrainerConfig(
+    method_name="sam_nerf16_garden",
+    steps_per_eval_batch=500,
+    # steps_per_eval_image=10,
+    steps_per_save=2000,
+    max_num_iterations=30000,
+    mixed_precision=True,
+    pipeline=SamPipelineConfig(
+        datamanager=SAMDataManagerConfig(
+            dataparser=NerfstudioDataParserConfig(
+                # downscale_factor
+                scale_factor=1.0,
+                train_val_json_split=True,
+                data=Path("/data/machine/data/flame_salmon_image/"),
+            ),
+            use_dino_feature=False,
+            train_num_rays_per_batch=4096 * 4,
+            eval_num_rays_per_batch=4096 * 4,
+            camera_optimizer=CameraOptimizerConfig(
+                mode="off",
+            ),
+            patch_size=4,
+            sam_feature_path="/data/machine/data/flame_salmon_image/sam_features/",
+            use_clipseg_feature=True,
+        ),
+        model=SAMModelConfig(
+            kernel_size=3,
+            use_clipseg_feature=True,
+            eval_num_rays_per_chunk=1 << 15,
+            use_appearance_embedding=False,
+            hidden_layers=1,
+            patch_size=4,
+            sam_loss_weight=1.0,
+            num_proposal_iterations=1,
+            num_proposal_samples_per_ray=(64,),
+            num_sam_samples=3,
+            num_nerf_samples_per_ray=32,
+        ),
+    ),
+    optimizers={
+        "proposal_networks": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "fields": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "conv": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+        "sam_field": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+    },
+    viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
+    vis="viewer+wandb",
+)
+
+method_configs["safefehghiehjfi"] = TrainerConfig(
+    method_name="sam_nerf16_garden",
+    steps_per_eval_batch=500,
+    steps_per_save=2000,
+    max_num_iterations=30000,
+    mixed_precision=True,
+    pipeline=SamPipelineConfig(
+        datamanager=SAMDataManagerConfig(
+            dataparser=NerfstudioDataParserConfig(
+                # downscale_factor
+                scale_factor=1.0,
+                train_val_json_split=True,
+                data=Path("/data/machine/data/mipnerf360/garden/"),
+            ),
+            use_dino_feature=False,
+            train_num_rays_per_batch=4096 * 4,
+            eval_num_rays_per_batch=4096 * 4,
+            camera_optimizer=CameraOptimizerConfig(
+                mode="off",
+            ),
+            patch_size=4,
+            sam_feature_path="/data/machine/data/mipnerf360/garden/sam_features/",
+        ),
+        model=SAMModelConfig(
+            kernel_size=3,
+            eval_num_rays_per_chunk=1 << 15,
+            use_appearance_embedding=False,
+            hidden_layers=1,
+            patch_size=4,
+            sam_loss_weight=1.0,
+            num_proposal_iterations=1,
+            num_proposal_samples_per_ray=(64,),
+            num_sam_samples=3,
+            num_nerf_samples_per_ray=32,
+        ),
+    ),
+    optimizers={
+        "proposal_networks": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "fields": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "conv": {
+            "optimizer": AdamOptimizerConfig(lr=1e-4, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+        "sam_field": {
+            "optimizer": AdamOptimizerConfig(lr=1e-4, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+    },
+    viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
+    vis="viewer+wandb",
+)
+
+method_configs["sam_nerf16_garden4_lr3"] = TrainerConfig(
+    method_name="sam_nerf16_garden",
+    steps_per_eval_batch=500,
+    steps_per_save=2000,
+    max_num_iterations=30000,
+    mixed_precision=True,
+    pipeline=SamPipelineConfig(
+        datamanager=SAMDataManagerConfig(
+            dataparser=NerfstudioDataParserConfig(
+                # downscale_factor
+                scale_factor=1.0,
+                train_val_json_split=True,
+                data=Path("/data/machine/data/mipnerf360/garden/"),
+            ),
+            use_dino_feature=False,
+            train_num_rays_per_batch=4096 * 4,
+            eval_num_rays_per_batch=4096 * 4,
+            camera_optimizer=CameraOptimizerConfig(
+                mode="off",
+            ),
+            patch_size=4,
+            sam_feature_path="/data/machine/data/mipnerf360/garden/sam_features/",
+        ),
+        model=SAMModelConfig(
+            kernel_size=3,
+            eval_num_rays_per_chunk=1 << 15,
+            use_appearance_embedding=False,
+            hidden_layers=1,
+            patch_size=4,
+            sam_loss_weight=1.0,
+            num_proposal_iterations=1,
+            num_proposal_samples_per_ray=(64,),
+            num_sam_samples=3,
+            num_nerf_samples_per_ray=32,
+        ),
+    ),
+    optimizers={
+        "proposal_networks": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "fields": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "conv": {
+            "optimizer": AdamOptimizerConfig(lr=1e-4, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+        "sam_field": {
+            "optimizer": AdamOptimizerConfig(lr=1e-4, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+    },
+    viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
+    vis="viewer+wandb",
+)
+
+method_configs["sam_nerf16_garden4_ablation1"] = TrainerConfig(
+    method_name="sam_nerf16_garden",
+    steps_per_eval_batch=500,
+    steps_per_save=2000,
+    max_num_iterations=30000,
+    mixed_precision=True,
+    pipeline=SamPipelineConfig(
+        datamanager=SAMDataManagerConfig(
+            dataparser=NerfstudioDataParserConfig(
+                # downscale_factor
+                scale_factor=1.0,
+                train_val_json_split=True,
+                data=Path("/data/machine/data/mipnerf360/garden/"),
+            ),
+            use_dino_feature=False,
+            train_num_rays_per_batch=4096 * 4,
+            eval_num_rays_per_batch=4096 * 4,
+            camera_optimizer=CameraOptimizerConfig(
+                mode="off",
+            ),
+            patch_size=4,
+            sam_feature_path="/data/machine/data/mipnerf360/garden/sam_features/",
+        ),
+        model=SAMModelConfig(
+            sharpening_temperature=1.0,
+            kernel_size=3,
+            eval_num_rays_per_chunk=1 << 15,
+            use_appearance_embedding=False,
+            hidden_layers=1,
+            patch_size=4,
+            sam_loss_weight=1.0,
+            num_proposal_iterations=1,
+            num_proposal_samples_per_ray=(64,),
+            num_sam_samples=3,
+            num_nerf_samples_per_ray=32,
+        ),
+    ),
+    optimizers={
+        "proposal_networks": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "fields": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "conv": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+        "sam_field": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+    },
+    viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
+    vis="viewer+wandb",
+)
+
+method_configs["sam_nerf16_garden4_lr2"] = TrainerConfig(
+    method_name="sam_nerf16_garden",
+    steps_per_eval_batch=500,
+    steps_per_save=2000,
+    max_num_iterations=30000,
+    mixed_precision=True,
+    pipeline=SamPipelineConfig(
+        datamanager=SAMDataManagerConfig(
+            dataparser=NerfstudioDataParserConfig(
+                # downscale_factor
+                scale_factor=1.0,
+                train_val_json_split=True,
+                data=Path("/data/machine/data/mipnerf360/garden/"),
+            ),
+            use_dino_feature=False,
+            train_num_rays_per_batch=4096 * 4,
+            eval_num_rays_per_batch=4096 * 4,
+            camera_optimizer=CameraOptimizerConfig(
+                mode="off",
+            ),
+            patch_size=4,
+            sam_feature_path="/data/machine/data/mipnerf360/garden/sam_features/",
+        ),
+        model=SAMModelConfig(
+            kernel_size=3,
+            eval_num_rays_per_chunk=1 << 15,
+            use_appearance_embedding=False,
+            hidden_layers=1,
+            patch_size=4,
+            sam_loss_weight=1.0,
+            num_proposal_iterations=1,
+            num_proposal_samples_per_ray=(64,),
+            num_sam_samples=3,
+            num_nerf_samples_per_ray=32,
+        ),
+    ),
+    optimizers={
+        "proposal_networks": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "fields": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "conv": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+        "sam_field": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+    },
+    viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
+    vis="viewer+wandb",
+)
+
+method_configs["sam_nerf16_garden4"] = TrainerConfig(
+    method_name="sam_nerf16_garden",
+    steps_per_eval_batch=500,
+    steps_per_save=2000,
+    max_num_iterations=30000,
+    mixed_precision=True,
+    pipeline=SamPipelineConfig(
+        datamanager=SAMDataManagerConfig(
+            dataparser=NerfstudioDataParserConfig(
+                # downscale_factor
+                scale_factor=1.0,
+                train_val_json_split=True,
+                data=Path("/data/machine/data/mipnerf360/garden/"),
+            ),
+            use_dino_feature=False,
+            train_num_rays_per_batch=4096 * 4,
+            eval_num_rays_per_batch=4096 * 4,
+            camera_optimizer=CameraOptimizerConfig(
+                mode="off",
+            ),
+            patch_size=16,
+            sam_feature_path="/data/machine/data/mipnerf360/garden/sam_features/",
+        ),
+        model=SAMModelConfig(
+            kernel_size=11,
+            eval_num_rays_per_chunk=1 << 15,
+            use_appearance_embedding=False,
+            hidden_layers=1,
+            patch_size=16,
+            sam_loss_weight=1.0,
+            num_proposal_iterations=1,
+            num_proposal_samples_per_ray=(64,),
+            num_sam_samples=3,
+            num_nerf_samples_per_ray=32,
+        ),
+    ),
+    optimizers={
+        "proposal_networks": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "fields": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "conv": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+        "sam_field": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+    },
+    viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
+    vis="viewer+wandb",
+)
+
+method_configs["sam_nerf16_garden3"] = TrainerConfig(
+    method_name="sam_nerf16_garden",
+    steps_per_eval_batch=500,
+    steps_per_save=2000,
+    max_num_iterations=30000,
+    mixed_precision=True,
+    pipeline=SamPipelineConfig(
+        datamanager=SAMDataManagerConfig(
+            dataparser=NerfstudioDataParserConfig(
+                # downscale_factor
+                scale_factor=1.0,
+                train_val_json_split=True,
+                data=Path("/data/machine/data/mipnerf360/garden/"),
+            ),
+            use_dino_feature=False,
+            train_num_rays_per_batch=4096 * 4,
+            eval_num_rays_per_batch=4096 * 4,
+            camera_optimizer=CameraOptimizerConfig(
+                mode="off",
+            ),
+            patch_size=4,
+            sam_feature_path="/data/machine/data/mipnerf360/garden/sam_features/",
+        ),
+        model=SAMModelConfig(
+            kernel_size=5,
+            eval_num_rays_per_chunk=1 << 15,
+            use_appearance_embedding=False,
+            hidden_layers=1,
+            patch_size=4,
+            sam_loss_weight=1.0,
+            num_proposal_iterations=1,
+            num_proposal_samples_per_ray=(64,),
+            num_sam_samples=3,
+            num_nerf_samples_per_ray=32,
+        ),
+    ),
+    optimizers={
+        "proposal_networks": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "fields": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "conv": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+        "sam_field": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+    },
+    viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
+    vis="viewer+wandb",
+)
+
+method_configs["sam_nerf16_garden2"] = TrainerConfig(
+    method_name="sam_nerf16_garden",
+    steps_per_eval_batch=500,
+    steps_per_save=2000,
+    max_num_iterations=30000,
+    mixed_precision=True,
+    pipeline=SamPipelineConfig(
+        datamanager=SAMDataManagerConfig(
+            dataparser=NerfstudioDataParserConfig(
+                # downscale_factor
+                scale_factor=1.0,
+                train_val_json_split=True,
+                data=Path("/data/machine/data/mipnerf360/garden/"),
+            ),
+            use_dino_feature=False,
+            train_num_rays_per_batch=4096 * 4,
+            eval_num_rays_per_batch=4096 * 4,
+            camera_optimizer=CameraOptimizerConfig(
+                mode="off",
+            ),
+            patch_size=4,
+            sam_feature_path="/data/machine/data/mipnerf360/garden/sam_features/",
+        ),
+        model=SAMModelConfig(
+            kernel_size=5,
+            eval_num_rays_per_chunk=1 << 15,
+            use_appearance_embedding=True,
+            hidden_layers=1,
+            patch_size=4,
+            sam_loss_weight=1.0,
+            num_proposal_iterations=1,
+            num_proposal_samples_per_ray=(128,),
+            num_sam_samples=3,
+        ),
+    ),
+    optimizers={
+        "proposal_networks": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "fields": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0005, max_steps=30000),
+        },
+        "conv": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+        "sam_field": {
+            "optimizer": AdamOptimizerConfig(lr=1e-3, eps=1e-15),
+            "scheduler": ExponentialDecaySchedulerConfig(lr_final=0.0001, max_steps=30000),
+        },
+    },
+    viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
+    vis="viewer+wandb",
+)
+
+
+method_configs["sam_nerf16_garden"] = TrainerConfig(
+    method_name="sam_nerf16_garden",
+    steps_per_eval_batch=500,
+    steps_per_save=2000,
+    max_num_iterations=30000,
+    mixed_precision=True,
+    pipeline=SamPipelineConfig(
+        datamanager=SAMDataManagerConfig(
+            dataparser=NerfstudioDataParserConfig(
+                # downscale_factor
+                scale_factor=1.0,
+                train_val_json_split=True,
+                data=Path("/data/machine/data/mipnerf360/garden/"),
             ),
             use_dino_feature=False,
             train_num_rays_per_batch=4096 * 4,
@@ -136,7 +656,7 @@ method_configs["sam_nerf16_garden"] = TrainerConfig(
         },
     },
     viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
-    vis="viewer",
+    vis="viewer+wandb",
 )
 
 method_configs["sam_nerf16_salmon"] = TrainerConfig(

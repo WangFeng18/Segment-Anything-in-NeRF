@@ -34,7 +34,6 @@ from nerfstudio.data.scene_box import SceneBox
 from nerfstudio.engine.callbacks import TrainingCallback, TrainingCallbackAttributes
 from nerfstudio.model_components.scene_colliders import NearFarCollider
 
-from TRTT.utils import Timer
 import time
 
 
@@ -173,16 +172,15 @@ class Model(nn.Module):
         image_height, image_width = camera_ray_bundle.origins.shape[:2]
         num_rays = len(camera_ray_bundle)
         outputs_lists = defaultdict(list)
-        with Timer("forwarding"):
-            _t1 = time.time()
-            for i in range(0, num_rays, num_rays_per_chunk):
-                start_idx = i
-                end_idx = i + num_rays_per_chunk
-                ray_bundle = camera_ray_bundle.get_row_major_sliced_ray_bundle(start_idx, end_idx)
-                outputs = self.forward(ray_bundle=ray_bundle)
-                for output_name, output in outputs.items():  # type: ignore
-                    outputs_lists[output_name].append(output)
-            print(f"forwarding took {time.time() - _t1} seconds")
+        _t1 = time.time()
+        for i in range(0, num_rays, num_rays_per_chunk):
+            start_idx = i
+            end_idx = i + num_rays_per_chunk
+            ray_bundle = camera_ray_bundle.get_row_major_sliced_ray_bundle(start_idx, end_idx)
+            outputs = self.forward(ray_bundle=ray_bundle)
+            for output_name, output in outputs.items():  # type: ignore
+                outputs_lists[output_name].append(output)
+        print(f"forwarding took {time.time() - _t1} seconds")
         outputs = {}
         for output_name, outputs_list in outputs_lists.items():
             if not torch.is_tensor(outputs_list[0]):

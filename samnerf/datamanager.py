@@ -24,6 +24,7 @@ class SAMDataManagerConfig(VanillaDataManagerConfig):
     _target: Type = field(default_factory=lambda: SAMDataManager)
     sam_feature_path: str = "Path to the features extracted by SAM"
     use_dino_feature: bool = False
+    use_clipseg_feature: bool = False
     dino_feature_path: str = "Path to the features extracted by DINO"
 
 
@@ -72,6 +73,24 @@ class SAMDataManager(VanillaDataManager):  # pylint: disable=abstract-method
                 image_shape=list(self.train_dataset[0]["image"].shape[:2]),
                 patch_size=1,
             )
+        if self.config.use_clipseg_feature:
+            clipseg_feature_filenames = [
+                os.path.join(
+                    os.path.dirname(os.path.dirname(name)),
+                    "clipseg_features",
+                    os.path.basename(name).split(".")[0] + ".pt",
+                )
+                for name in self.train_dataparser_outputs.image_filenames
+            ]
+            self.clipseg_loader = FeatureDataloader(
+                device,
+                npy_paths=clipseg_feature_filenames,
+                image_shape=list(self.train_dataset[0]["image"].shape[:2]),
+                patch_size=1,
+                get_feature=lambda x: torch.cat(x["activations"], dim=-1)
+                .squeeze()[1:, ...]
+                .reshape(512 // 16, 512 // 16, -1),
+            )
 
     def next_train(self, step: int) -> Tuple[RayBundle, Dict]:
         """Returns the next batch of data from the train dataloader."""
@@ -89,5 +108,7 @@ class SAMDataManager(VanillaDataManager):  # pylint: disable=abstract-method
         batch["sam"] = self.sam_loader(center_indices)
         if self.config.use_dino_feature:
             batch["dino"] = self.dino_loader(ray_indices)
+        if self.config.use_clipseg_feature:
+            batch["clipseg"] = self.clipseg_loader(ray_indices)
         # assume all cameras have the same focal length and image width
         return ray_bundle, batch

@@ -17,6 +17,7 @@ class FeatureDataloader(ABC):
         npy_paths,
         image_shape: typing.Tuple[int, int],
         patch_size: int = 1,
+        get_feature=lambda x: x,
     ):
         print("====================Image Shape====================")
         print(image_shape)
@@ -40,6 +41,7 @@ class FeatureDataloader(ABC):
             features = []
             for npy in npy_paths:
                 feature = torch.load(npy)
+                feature = get_feature(feature)
                 features.append(feature)
             features = torch.stack(features, dim=0)
             self.features = features.to(device)

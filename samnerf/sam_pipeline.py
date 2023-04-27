@@ -117,7 +117,7 @@ class SamPipeline(VanillaPipeline):
 
             camera_ray_bundle = camera.generate_rays(camera_indices=0)
             
-            outputs = self.model.get_outputs_for_camera_ray_bundle(camera_ray_bundle, points, intrin, c2wt)
+            outputs = self.model.get_outputs_for_camera_ray_bundle(camera_ray_bundle, points, intrin, c2wt, fast=False)
             frames[i] = (outputs["masked_rgb"] * 255.).cpu().to(torch.uint8)
 
         
