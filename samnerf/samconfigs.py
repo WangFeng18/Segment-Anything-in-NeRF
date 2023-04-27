@@ -431,6 +431,7 @@ method_configs["sam_nerf16_garden4_lr2"] = TrainerConfig(
 method_configs["sam_nerf16_garden4"] = TrainerConfig(
     method_name="sam_nerf16_garden",
     steps_per_eval_batch=500,
+    steps_per_eval_image=50,
     steps_per_save=2000,
     max_num_iterations=30000,
     mixed_precision=True,

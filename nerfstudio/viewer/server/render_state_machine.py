@@ -206,16 +206,26 @@ class RenderStateMachine(threading.Thread):
                 else:
                     with torch.no_grad():
                         # breakpoint()
-                        points = get_prompt_points(cam_msg, image_height, image_width)
+                        points = None
+                        text_prompt = None
+                        threshold = 0.0
+                        topk = 0
                         if self.viewer.use_sam:
+                            points = get_prompt_points(cam_msg, image_height, image_width)
                             print("SAM case\n")
-                            outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrinsics_matrix, c2w=camera_to_world)
+                            # outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrinsics_matrix, c2w=camera_to_world)
                         elif self.viewer.use_text_prompt:
                             print("Text Prompt SAM case\n")
-                            outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, text_prompt=self.viewer.text_prompt, threshold=self.viewer.threshold)
-                        else:
-                            print("Trivial case")
-                            outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle) 
+                            print("text prompts:", self.viewer.text_prompt)
+                            print("threshold:", self.viewer.threshold)
+                            print("topK:", self.viewer.topk)
+                            text_prompt = self.viewer.text_prompt
+                            threshold = self.viewer.threshold
+                            topk = int(self.viewer.topk)
+
+                            # outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, text_prompt=self.viewer.text_prompt, threshold=self.viewer.threshold)
+                            # outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle) 
+                        outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrinsics_matrix, c2w=camera_to_world, text_prompt=text_prompt, topk=topk, thresh=threshold) 
                         
                         self.viewer.get_model().train()
                 self.viewer.get_model().train()
@@ -241,7 +251,7 @@ class RenderStateMachine(threading.Thread):
             if self.state == "high" and action.action == "static":
                 # if we are in high res and we get a static action, we don't need to do anything
                 # TODO currently a workaround
-                if self.last_cam_msg is not None and len(action.cam_msg.xs) != len(self.last_cam_msg.xs):
+                if self.last_cam_msg is not None and action.cam_msg is not None and len(action.cam_msg.xs) != len(self.last_cam_msg.xs):
                     pass
                 else:
                     continue

@@ -75,15 +75,25 @@ class SamPipeline(VanillaPipeline):
         # else:
         #     points = np.array([[100, 100], [200, 200], [300, 300]])
 
-        if step < 2000:
-            outputs = self.model.get_outputs_for_camera_ray_bundle(camera_ray_bundle)
+        if step < 300:
+            points = np.array([[648, 400]])
+            intrin = np.zeros([3, 3])
+            cam = self.datamanager.eval_dataset.cameras
+            intrin[0, 0] = cam.fx[0, 0].item()
+            intrin[1, 1] = cam.fy[0, 0].item()
+            intrin[0, 2] = cam.cx[0, 0].item()
+            intrin[1, 2] = cam.cy[0, 0].item()
+
+            c2w = self.datamanager.eval_dataset.cameras.camera_to_worlds[image_idx]
+            outputs = self.model.get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrin, c2w=c2w, fast=False)
+            save_img(outputs["masked_rgb"], "test.png")
             metrics_dict, images_dict = self.model.get_image_metrics_and_images(outputs, batch)
             assert "image_idx" not in metrics_dict
             metrics_dict["image_idx"] = image_idx
             assert "num_rays" not in metrics_dict
             metrics_dict["num_rays"] = len(camera_ray_bundle)
             self.train()
-            return metrics_dict, images_dict
+            return metrics_dict, {}
         
         print("\n\ndebug\n\n")
         points = np.array([[648, 400]])

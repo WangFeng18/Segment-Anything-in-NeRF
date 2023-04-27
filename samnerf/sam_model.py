@@ -153,7 +153,7 @@ class SAMModelConfig(NerfactoModelConfig):
     patch_size: int = 1
     kernel_size: int = 3
 
-    distill_sam: bool = False
+    distill_sam: bool = True
     sam_checkpoint: str = "/data/machine/nerfstudio/segment-anything/sam_vit_h_4b8939.pth"
     sharpening_temperature: float = 10.0
 
@@ -294,8 +294,10 @@ class SAMModel(NerfactoModel):
                 "depth": depth,
             }
         else:
+            depth = self.renderer_depth(weights=weights, ray_samples=ray_samples)
             outputs = {
                 "rgb": rgb,
+                "depth": depth,
             }
 
         return field_outputs, outputs, weights
@@ -342,8 +344,8 @@ class SAMModel(NerfactoModel):
         intrin=None,
         c2w=None,
         text_prompt=None,
-        topk: int = 5,
-        thresh: float = 0.5,
+        topk=5,
+        thresh=0.5,
         fast=True,
     ):
         """Takes in camera parameters and computes the output of the model.
@@ -484,7 +486,10 @@ class SAMModel(NerfactoModel):
 
             input_points = prompts
 
+        print(self.config.distill_sam)
+        print(outputs.keys())
         if self.config.distill_sam and "sam" in outputs:
+            print("case1")
             self.predictor.set_feature(outputs["sam"].permute(2, 0, 1), original_image_size=(image_height, image_width))
             if self.config.use_clipseg_feature:
                 acts = []
@@ -528,7 +533,8 @@ class SAMModel(NerfactoModel):
                     outputs["masked_rgb"] = show_prompts(
                         prompts, outputs["depth"], intrin, c2w, outputs["masked_rgb"], self.prompts[legal], h
                     )
-        else:
+        elif not self.config.distill_sam:
+            print("case2")
             msk_img = self.lang_sam.set_and_segment(
                 (outputs["rgb"].cpu().numpy() * 255).astype(np.uint8),
                 prompt,
@@ -538,6 +544,10 @@ class SAMModel(NerfactoModel):
                 output_format="tensor",
             ).to(outputs["rgb"])
             outputs["masked_rgb"] = msk_img
+            if self.prompts is not None:
+                outputs["masked_rgb"] = show_prompts(
+                    prompts, outputs["depth"], intrin, c2w, outputs["masked_rgb"], self.prompts[legal], h
+                )
         return outputs
 
     def get_image_metrics_and_images(

@@ -127,6 +127,7 @@ class ViewerState:
         
         self.text_prompt = ""
         self.threshold = 0.0
+        self.topk = 5
 
         # viewer specific variables
         self.output_type_changed = True
@@ -216,7 +217,8 @@ class ViewerState:
             self.use_sam = True
         else:
             self.viser_server.clear_sam_pins()
-            self.control_panel.output_render = "rgb"
+            if not self.use_text_prompt:
+                self.control_panel.output_render = "rgb"
             self.use_sam = False
         self.use_sam = self.control_panel.use_sam
         self.render_statemachine.action(action=RenderAction("static", None))
@@ -241,16 +243,18 @@ class ViewerState:
         # Fuck this is beautiful
         self.use_text_prompt = True
         self.control_panel.output_render = "text_prompt"
+        self.control_panel.output_render = "masked_rgb"
         self.text_prompt = self.control_panel.text_prompt
         self.threshold = self.control_panel.threshold
+        self.topk = self.control_panel.topk
         self.render_statemachine.action(action=RenderAction("static", None))
         
     def _clear_text_prompt(self, _) -> None:
         self.text_prompt = ""
-        self.control_panel.output_render = "rgb"
+        if not self.use_sam:
+            self.control_panel.output_render = "rgb"
         self.control_panel.text_prompt = ""
-        self.enable_text_prompt = False
-        self.threshold = 0.0
+        self.use_text_prompt = False
         self.render_statemachine.action(action=RenderAction("static", None))
 
     def _handle_training_state_message(self, message: NerfstudioMessage) -> None:

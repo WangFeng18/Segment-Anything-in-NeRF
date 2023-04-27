@@ -57,9 +57,9 @@ class ControlPanel:
         send_text_prompt_cb: Callable,
         clear_text_prompt_cb: Callable,
         fixed_fps_cb: Callable,
-        video_enabled: bool,
-        play_button_cb: Callable,
-        timeline_cb: Callable,
+        # video_enabled: bool,
+        # play_button_cb: Callable,
+        # timeline_cb: Callable,
     ):
         # elements holds a mapping from tag: [elements]
         self._elements_by_tag: DefaultDict[str, List[ViewerElement]] = defaultdict(lambda: [])
@@ -98,13 +98,14 @@ class ControlPanel:
 
         self._text_prompt = ViewerText("Text Prompt", "man in black")
         self._threshold = ViewerNumber("Threshold for ClipSeg", 1.0)
+        self._topk = ViewerNumber("Number of text prompt points", 5)
         # TODO: add this cb_hook
         self._send_text_prompt = ViewerButton("Send Text Prompt", cb_hook=send_text_prompt_cb)
         # TODO add cb_hook for clear button
         self._clear_text_prompt = ViewerButton("Clear Text Prompt", cb_hook=clear_text_prompt_cb)
 
-        self._timeline = ViewerSlider("Time", default_value=0.0, max_value=1.0, cb_hook=timeline_cb)
-        self._play_button = ViewerButton("Play", cb_hook=play_button_cb)
+        # self._timeline = ViewerSlider("Time", default_value=0.0, max_value=1.0, cb_hook=timeline_cb)
+        # self._play_button = ViewerButton("Play", cb_hook=play_button_cb)
 
         self._sam_enabled = sam_enabled
         self._text_enabled = text_enabled
@@ -135,6 +136,7 @@ class ControlPanel:
         self.add_element(self._use_fixed_fps, additional_tags=("fps"))
         self.add_element(self._text_prompt, additional_tags=("text",))
         self.add_element(self._threshold, additional_tags=("text",))
+        self.add_element(self._topk, additional_tags=("text",))
         self.add_element(self._send_text_prompt, additional_tags=("text"))
         self.add_element(self._clear_text_prompt, additional_tags=("text"))
 
@@ -185,17 +187,19 @@ class ControlPanel:
         self._colormap.set_disabled(self.output_render == "rgb")
         self._colormap.set_hidden(self.use_sam)
         for e in self._elements_by_tag["colormap"]:
-            e.set_hidden(self.output_render == "rgb" or self.use_sam)
+            e.set_hidden(self.output_render == "rgb" or self.use_sam or self._text_enabled)
         for e in self._elements_by_tag["crop"]:
             e.set_hidden(not self.crop_viewport)
         self._time.set_hidden(not self._time_enabled)
         self._text_prompt.set_hidden(not self._text_enabled)
         self._threshold.set_hidden(not self._text_enabled)
+        self._topk.set_hidden(not self._text_enabled)
         self._send_text_prompt.set_hidden(not self._text_enabled)
         self._clear_text_prompt.set_hidden(not self._text_enabled)
         self._clear_sam_pins.set_hidden(not self.use_sam)
-        self._play_button.set_hidden(self._video_enabled)
-        self._timeline.set_hidden(self._video_enabled)
+
+        # self._play_button.set_hidden(self._video_enabled)
+        # self._timeline.set_hidden(self._video_enabled)
 
     def update_colormap_options(self, dimensions: int, dtype: type) -> None:
         """update the colormap options based on the current render
@@ -336,9 +340,13 @@ class ControlPanel:
         self._threshold.value = value
 
     @property
-    def use_fixed_fps(self) -> bool:
-        return self._use_fixed_fps.value
+    def topk(self) -> int:
+        return self._topk.value
+    
+    @topk.setter
+    def topk(self, value: int):
+        self._topk.value = value
 
     @property
-    def is_playing(self) -> bool:
-        return self._play_button.value
+    def use_fixed_fps(self) -> bool:
+        return self._use_fixed_fps.value
