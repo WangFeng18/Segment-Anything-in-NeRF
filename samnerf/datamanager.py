@@ -43,6 +43,7 @@ class SAMDataManager(VanillaDataManager):  # pylint: disable=abstract-method
         super().__init__(
             config=config, device=device, test_mode=test_mode, world_size=world_size, local_rank=local_rank, **kwargs
         )
+        self.includes_time = False
 
         sam_feature_filenames = [
             os.path.join(

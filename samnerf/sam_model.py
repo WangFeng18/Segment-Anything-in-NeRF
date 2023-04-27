@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Type
 
-
+import cv2
 import numpy as np
 import torch
 from nerfstudio.cameras.rays import RayBundle, RaySamples
@@ -31,6 +31,93 @@ from nerfstudio.model_components.renderers import (
     RGBRenderer,
 )
 from einops import rearrange
+from torchvision.utils import draw_keypoints
+
+EPS = 1e-4
+TOR = 1e-2
+
+def save_img(tensor, filename):
+    # tensor: [h, w, c]
+    # print(tensor.shape)
+    img = tensor.detach().cpu().numpy()
+    img = (img * 255.).astype(np.uint8)
+    cv2.imwrite(filename, img)
+
+SIZE = 4 # for h = 840
+
+def show_prompts(prompts, depth, intrin, c2w, img, prompts_3d, h=None):
+    if len(prompts) == 0:
+        return img 
+    
+    fx = intrin[0, 0]
+    fy = intrin[1, 1]
+    cx = intrin[0, 2]
+    cy = intrin[1, 2]
+
+    prompts = torch.from_numpy(prompts).to(torch.long)
+    # print(prompts)
+
+    coords = prompts - torch.tensor([[cx, cy]]).to(prompts.device)
+    coords /= torch.tensor([[fx, -fy]])
+
+    padding = -torch.ones_like(coords[..., :1])
+    coords = torch.cat([coords, padding], dim=-1)[..., None, :]
+
+    rotation = c2w[:3, :3]
+    # print(rotation.shape)
+    # print(coords.shape)
+    rays_d = torch.sum(coords * rotation, dim=-1)
+    rays_d /= rays_d.norm(dim=-1, keepdim=True)
+    rays_o = c2w[:3, 3].unsqueeze(0).repeat(coords.shape[0], 1)
+    ts = ((prompts_3d - rays_o) / rays_d).mean(dim=-1)
+    # print(((prompts_3d - rays_o) / rays_d))
+    # print(ts.shape)
+
+    visible = ts < (depth[prompts[..., 1], prompts[..., 0]].to(ts.device).squeeze() + EPS)
+    # print(visible)
+    # print(prompts)
+    prompts = prompts[visible]
+
+    r = SIZE
+    if h is not None:
+        r = int(r * h / 840)
+        r = max(r, 1)
+    img = (255 * img).to(torch.uint8).moveaxis(-1, 0)
+    img = draw_keypoints(img, prompts[None, ...], radius=r, colors="red").to(torch.float32) / 255.0
+    img = img.moveaxis(0, -1)
+
+    return img
+
+
+def project(intrin, c2w, points):
+    fx = intrin[0, 0]
+    fy = intrin[1, 1]
+    cx = intrin[0, 2]
+    cy = intrin[1, 2]
+
+    if c2w.shape[0] == 3:
+        padding = torch.tensor([[0.0, 0.0, 0.0, 1.0]]).to(c2w)
+        c2w = torch.cat([c2w, padding], dim=0)
+        # [4, 4]
+
+    if points.shape[-1] == 3:
+        padding = torch.tensor([[1.0]] * points.shape[0]).to(points)
+        points = torch.cat([points, padding], dim=-1)
+        # [n, 4]
+
+    w2c = torch.inverse(c2w)[:3]
+
+    img_coords = torch.einsum("ij,bj->bi", w2c, points)
+    img_coords = -img_coords / img_coords[..., -1:]
+    img_coords = img_coords[..., :2]
+    # make img_z == -1
+
+    img_coords[..., 0] *= fx
+    img_coords[..., 0] += cx
+    img_coords[..., 1] *= -fy
+    img_coords[..., 1] += cy
+
+    return img_coords.to(torch.int32)
 
 
 class MeanRenderer(nn.Module):
@@ -66,7 +153,7 @@ class SAMModelConfig(NerfactoModelConfig):
     patch_size: int = 1
     kernel_size: int = 3
 
-    distill_sam: bool = False
+    distill_sam: bool = True
     sam_checkpoint: str = "/data/machine/nerfstudio/segment-anything/sam_vit_h_4b8939.pth"
     sharpening_temperature: float = 10.0
 
@@ -91,6 +178,11 @@ class SAMModel(NerfactoModel):
 
     def populate_modules(self):
         super().populate_modules()
+
+        self.sam_capable = True
+        self.text_prompt_capable = True
+
+        self.prompts = None
 
         self.renderer_mean = MeanRenderer()
 
@@ -202,8 +294,10 @@ class SAMModel(NerfactoModel):
                 "depth": depth,
             }
         else:
+            depth = self.renderer_depth(weights=weights, ray_samples=ray_samples)
             outputs = {
                 "rgb": rgb,
+                "depth": depth,
             }
 
         return field_outputs, outputs, weights
@@ -247,10 +341,12 @@ class SAMModel(NerfactoModel):
         self,
         camera_ray_bundle: RayBundle,
         points=None,
+        intrin=None,
+        c2w=None,
         text_prompt=None,
-        topk: int = 5,
-        thresh: float = 0.5,
-        fast=True,
+        topk=5,
+        thresh=0.5,
+        fast=False,
     ):
         """Takes in camera parameters and computes the output of the model.
 
@@ -261,6 +357,7 @@ class SAMModel(NerfactoModel):
         image_height, image_width = camera_ray_bundle.origins.shape[:2]
         num_rays = len(camera_ray_bundle)
         outputs_lists = defaultdict(list)
+        _t1 = time.time()
         for i in range(0, num_rays, num_rays_per_chunk):
             start_idx = i
             end_idx = i + num_rays_per_chunk
@@ -327,9 +424,72 @@ class SAMModel(NerfactoModel):
             prompt = "a man is cooking"
         else:
             prompt = text_prompt
-        input_points = points
 
+        if points is None:
+            self.prompts = None
+            outputs["masked_rgb"] = outputs["rgb"]
+        else:
+            print("points:", points)
+            assert intrin is not None
+            assert c2w is not None
+            fx = intrin[0, 0]
+            fy = intrin[1, 1]
+            cx = intrin[0, 2]
+            cy = intrin[1, 2]
+
+            if len(points > 0):
+                perform = False
+                if self.prompts is not None:
+                    if len(points) > self.prompts.size(0):
+                        points = points[self.prompts.size(0):]
+                        perform = True
+                else:
+                    perform = True
+
+                if perform:
+                    points = torch.from_numpy(points).to(c2w.device).to(torch.long)
+                    h, w = outputs["rgb"].shape[:2]
+                    img_x = points[..., 0]
+                    img_y = points[..., 1]
+                    t = outputs["depth"][img_y, img_x] - TOR
+                    # print(t)
+                    x = (points[..., 0] - cx) / fx
+                    y = -(points[..., 1] - cy) / fy
+                    padding = -torch.ones_like(x)
+
+                    coords = torch.stack([x, y, padding], dim=-1)[..., None, :]
+                    rotation = c2w[:3, :3].unsqueeze(0).repeat(coords.shape[0], 1, 1)
+
+                    # TODO: check here
+                    direction = torch.sum(coords * rotation, dim=-1)
+                    direction /= torch.norm(direction, dim=-1, keepdim=True)
+                    new_point = c2w[:3, 3] + t.to(direction) * direction
+                    if self.prompts is None:
+                        self.prompts = new_point
+                    else:
+                        self.prompts = torch.cat([self.prompts, new_point], dim=0)
+            else:
+                self.prompts = None
+            
+        input_points = None
+            
+        if self.prompts is not None:
+            h, w = outputs["rgb"].shape[:2]
+            prompts = project(intrin, c2w, self.prompts)
+            print("prompts", prompts)
+
+            bounds = torch.tensor([[w, h]]).to(prompts)
+            legal = torch.logical_and(prompts >= 0, prompts < bounds).all(dim=-1)
+
+            prompts = prompts[legal]
+            prompts = prompts.cpu().clone().numpy()
+
+            input_points = prompts
+
+        print(self.config.distill_sam)
+        print(outputs.keys())
         if self.config.distill_sam and "sam" in outputs:
+            print("case1")
             self.predictor.set_feature(outputs["sam"].permute(2, 0, 1), original_image_size=(image_height, image_width))
             if self.config.use_clipseg_feature:
                 acts = []
@@ -368,7 +528,13 @@ class SAMModel(NerfactoModel):
                     * len(input_points)
                 )
                 outputs["masked_rgb"] = generate_masked_img(self.predictor, input_points, input_label, outputs["rgb"])
+                
+                if self.prompts is not None:
+                    outputs["masked_rgb"] = show_prompts(
+                        prompts, outputs["depth"], intrin, c2w, outputs["masked_rgb"], self.prompts[legal], h
+                    )
         elif not self.config.distill_sam:
+            print("case2")
             msk_img = self.lang_sam.set_and_segment(
                 (outputs["rgb"].cpu().numpy() * 255).astype(np.uint8),
                 prompt,
@@ -377,8 +543,15 @@ class SAMModel(NerfactoModel):
                 points=input_points,
                 output_format="tensor",
             ).to(outputs["rgb"])
+
             outputs["masked_rgb"] = msk_img
-            outputs["clipseg_feature"] = self.lang_sam.clipseg_feature
+            outputs["clipseg_feature"] = self.lang_sam.clipseg_feature.unsqueeze(dim=-1)
+
+            if self.prompts is not None:
+                outputs["masked_rgb"] = show_prompts(
+                    prompts, outputs["depth"], intrin, c2w, outputs["masked_rgb"], self.prompts[legal], h
+                )
+
         return outputs
 
     def get_image_metrics_and_images(
