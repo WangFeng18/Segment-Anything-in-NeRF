@@ -63,9 +63,6 @@ class SamPredictor:
             input_image_torch = (
                 self.transform.apply_image_torch(image.permute(2, 0, 1).unsqueeze(dim=0)).to(self.device).contiguous()
             )
-        print("========")
-        print(input_image_torch.float().mean())
-        print("========")
 
         self.set_torch_image(input_image_torch, image.shape[:2])
 

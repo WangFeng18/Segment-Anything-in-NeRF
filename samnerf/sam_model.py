@@ -368,7 +368,7 @@ class SAMModel(NerfactoModel):
                     * len(input_points)
                 )
                 outputs["masked_rgb"] = generate_masked_img(self.predictor, input_points, input_label, outputs["rgb"])
-        else:
+        elif not self.config.distill_sam:
             msk_img = self.lang_sam.set_and_segment(
                 (outputs["rgb"].cpu().numpy() * 255).astype(np.uint8),
                 prompt,
@@ -378,6 +378,7 @@ class SAMModel(NerfactoModel):
                 output_format="tensor",
             ).to(outputs["rgb"])
             outputs["masked_rgb"] = msk_img
+            outputs["clipseg_feature"] = self.lang_sam.clipseg_feature
         return outputs
 
     def get_image_metrics_and_images(

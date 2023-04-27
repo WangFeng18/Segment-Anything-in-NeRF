@@ -54,8 +54,6 @@ class LanguageSAM:
 
     def get_masked_image(self, mask, image):
         mask_img = self.show_mask_tensor(mask, random_color=True)
-        # mask_img = torch.from_numpy(mask_img).to(image.device)
-        # print(f"from numpy time: {time.time() - _time1}")
         mask_p_img = mask_img[..., :3] * mask_img[..., 3:] + image * (1 - mask_img[..., 3:])
         return mask_p_img
 
@@ -97,6 +95,7 @@ class LanguageSAM:
         self, prompt=["a man is cooking"], point_num=5, threshold=0.5, points=None, output_format="numpy"
     ):
         feat = self.clipseg_model(self.image_clipseg.to(self.device), conditional=prompt)[0][0, 0].sigmoid()
+        self.clipseg_feature = feat
         feat = rearrange(feat, "(h p1) (w p2) -> h w (p1 p2)", p1=16, p2=16).mean(dim=-1)
         # inds = torch.nonzero(feat == feat.max())
         inds = feat.flatten().topk(k=point_num)[1]
@@ -125,9 +124,23 @@ class LanguageSAM:
         )
 
     def launch_gradio(self):
+        # css = ".output_image {height: 40rem !important; width: 100% !important;}"
+        # css = ".output-image, .input-image, .image-preview {height: 600px !important}"
         if not hasattr(self, "demo"):
             print("creating gradio interface")
-            self.demo = gr.Interface(fn=self.set_and_segment, inputs=[gr.Image(type="numpy"), "text"], outputs="image")
+            gr.Markdown("## Segment Anything with Language propmpts")
+            with gr.Blocks() as self.demo:
+                with gr.Row():
+                    inp_img = gr.Image(type="numpy").style(height=400, width=700)
+                    out_img = gr.Image().style(height=400, width=700)
+                with gr.Row():
+                    inp_prompt = gr.Textbox(lines=1, label="Prompt").style(width="25%")
+                    thr_slider = gr.Slider(minimum=0, maximum=1, step=0.05, default=0.5, label="Thresh")
+                    topk_slider = gr.Slider(minimum=0, maximum=300, step=1, default=5, label="TopK")
+                    btn = gr.Button("Go!")
+                    # btn2 = gr.Button("Button 2")
+                btn.click(self.set_and_segment, inputs=[inp_img, inp_prompt, topk_slider, thr_slider], outputs=out_img)
+            # self.demo = gr.Interface(fn=self.set_and_segment, inputs=[gr.Image(type="numpy").style(height=500, width=700), "text"], outputs=gr.Image().style(height=500, width=700))
         self.demo.launch(share=True)
 
     def close_gradio(self):
