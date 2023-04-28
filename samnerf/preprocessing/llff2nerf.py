@@ -1,3 +1,6 @@
+'''
+This file is copied from https://github.com/ashawkey/torch-ngp/blob/main/scripts/llff2nerf.py
+'''
 import os
 import glob
 import numpy as np

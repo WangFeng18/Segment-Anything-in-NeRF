@@ -21,8 +21,8 @@ class LanguageSAM:
         self.clipseg_model = clipseg_model
 
         sam_checkpoint = {
-            "vit_b": "/data/machine/nerfstudio/segment-anything/sam_vit_b_01ec64.pth",
-            "vit_h": "/data/machine/nerfstudio/segment-anything/sam_vit_h_4b8939.pth",
+            "vit_b": "samnerf/segment-anything/sam_vit_b_01ec64.pth",
+            "vit_h": "samnerf/segment-anything/sam_vit_h_4b8939.pth",
         }
         sam = sam_model_registry[sam_model](checkpoint=sam_checkpoint[sam_model])
         sam.to(device=device)

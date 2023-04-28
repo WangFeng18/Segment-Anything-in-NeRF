@@ -61,7 +61,7 @@ method_configs["samnerf_no_distill"] = TrainerConfig(
                 # downscale_factor
                 scale_factor=1.0,
                 train_val_json_split=True,
-                data=Path("/data/machine/data/mipnerf360/room/"),
+                data=Path("/data/mipnerf360/room/"),
             ),
             use_dino_feature=False,
             train_num_rays_per_batch=4096 * 4,

@@ -157,7 +157,7 @@ class SAMModelConfig(NerfactoModelConfig):
     kernel_size: int = 3
 
     distill_sam: bool = True
-    sam_checkpoint: str = "/data/machine/nerfstudio/segment-anything/sam_vit_h_4b8939.pth"
+    sam_checkpoint: str = "samnerf/segment-anything/sam_vit_h_4b8939.pth"
     sharpening_temperature: float = 10.0
 
 
