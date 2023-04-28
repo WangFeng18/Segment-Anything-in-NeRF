@@ -343,6 +343,7 @@ export default function ViewerWindow(props) {
     } else {
       is_moving = true;
     }
+    // console.log(xs.length);
     old_camera_matrix = sceneTree.metadata.camera.matrix.elements.slice();
     sendThrottledCameraMessage({
       type: 'CameraMessage',
@@ -368,7 +369,7 @@ export default function ViewerWindow(props) {
       clearInterval(refreshIntervalId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viser_websocket, camera_choice, camera_type, render_aspect, xs, ys]);
+  }, [viser_websocket, camera_choice, camera_type, render_aspect, xs, ys, sam_points_changed]);
 
   const isWebsocketConnected = useSelector(
     (state) => state.websocketState.isConnected,

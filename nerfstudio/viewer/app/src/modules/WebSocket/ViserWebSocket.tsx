@@ -285,6 +285,7 @@ function handleMessage(
       break;
     }
     case 'ClearSamPinsMessage': {
+      console.log("clear");
       dispatch({
         type: 'write',
         path: 'renderingState/xs',
@@ -295,6 +296,11 @@ function handleMessage(
         path: 'renderingState/ys',
         data: [],
       });
+      dispatch({
+        type: 'write',
+        path: 'renderingState/sam_points_changed',
+        data: true,
+      })
       break;
     }
     case 'TextPromptMessage': {
