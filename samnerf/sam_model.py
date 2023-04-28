@@ -200,10 +200,6 @@ class SAMModel(NerfactoModel):
                 nn.Conv2d(256, 256, self.config.kernel_size, stride=1, padding=(self.config.kernel_size - 1) // 2),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(256, 256, self.config.kernel_size, stride=1, padding=(self.config.kernel_size - 1) // 2),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(256, 256, self.config.kernel_size, stride=1, padding=(self.config.kernel_size - 1) // 2),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(256, 256, self.config.kernel_size, stride=1, padding=(self.config.kernel_size - 1) // 2),
                 # nn.ReLU(inplace=True),
                 # nn.Conv2d(256, 256, self.config.kernel_size, stride=1, padding=(self.config.kernel_size - 1) // 2),
             )
@@ -372,7 +368,8 @@ class SAMModel(NerfactoModel):
         # for sam distillation
         if self.config.distill_sam:
             feature_h, feature_w = get_feature_size(image_height, image_width)
-            if sz[0] >= feature_h * self.config.patch_size and sz[1] >= feature_w * self.config.patch_size:
+            # if sz[0] >= feature_h * self.config.patch_size and sz[1] >= feature_w * self.config.patch_size or True:
+            if True:
                 h_indices = torch.linspace(0, sz[0] - 1, feature_h * self.config.patch_size, dtype=torch.long)
                 w_indices = torch.linspace(0, sz[1] - 1, feature_w * self.config.patch_size, dtype=torch.long)
                 hind, wind = torch.meshgrid(h_indices, w_indices)
@@ -427,9 +424,9 @@ class SAMModel(NerfactoModel):
         else:
             prompt = text_prompt
 
+        outputs["masked_rgb"] = outputs["rgb"]
         if points is None:
             self.prompts = None
-            outputs["masked_rgb"] = outputs["rgb"]
         else:
             print("points:", points)
             assert intrin is not None
@@ -530,7 +527,6 @@ class SAMModel(NerfactoModel):
                 outputs["masked_rgb"] = generate_masked_img(self.predictor, input_points, input_label, outputs["rgb"])
                 
                 if self.prompts is not None:
-                    print("Show prompts")
                     outputs["masked_rgb"] = show_prompts(
                         prompts, outputs["depth"], intrin, c2w, outputs["masked_rgb"], self.prompts[legal], h
                     )
@@ -554,7 +550,9 @@ class SAMModel(NerfactoModel):
                 outputs["masked_rgb"] = show_prompts(
                     prompts, outputs["depth"], intrin, c2w, outputs["masked_rgb"], self.prompts[legal], h
                 )
-
+        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        print(outputs["masked_rgb"].shape)
+        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         print(f"clipseg + sam cost {time.time() - _t1}s")
         return outputs
 
