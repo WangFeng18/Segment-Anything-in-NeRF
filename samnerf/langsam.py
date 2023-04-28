@@ -77,11 +77,15 @@ class LanguageSAM:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         else:
             image = img_path
-            # if self.image == image:
-            #     print("same image")
-            #     return
+            try:
+                if self.image is not None and isinstance(image, np.ndarray) and isinstance(self.image, np.ndarray) and (self.image == image).all():
+                    print("same image")
+                    return
+            except:
+                print(image==self.image)
 
         self.image = image
+        print(type(image))
         if isinstance(self.image, np.ndarray):
             image_pil = Image.fromarray(self.image)
             self.image_clipseg = self.transform(image_pil).unsqueeze(0)
@@ -117,11 +121,15 @@ class LanguageSAM:
             masked_image = self.generate_masked_img(inds, inp_labels)
         return masked_image
 
-    def set_and_segment(self, image, pmt, pts=5, thres=0.5, points=None, output_format="numpy"):
+    def set_and_segment(self, image, pmt, pts=5, thres=0.5, vis_clipseg=False, points=None, output_format="numpy"):
         self.set_image(image)
-        return self.get_mask_by_prompt(
+        mskimg = self.get_mask_by_prompt(
             prompt=[pmt], point_num=pts, threshold=thres, points=points, output_format=output_format
         )
+        if vis_clipseg:
+            return self.clipseg_feature.cpu().detach().numpy()
+        else:
+            return mskimg
 
     def launch_gradio(self):
         # css = ".output_image {height: 40rem !important; width: 100% !important;}"
@@ -135,11 +143,12 @@ class LanguageSAM:
                     out_img = gr.Image().style(height=400, width=700)
                 with gr.Row():
                     inp_prompt = gr.Textbox(lines=1, label="Prompt").style(width="25%")
-                    thr_slider = gr.Slider(minimum=0, maximum=1, step=0.05, default=0.5, label="Thresh")
-                    topk_slider = gr.Slider(minimum=0, maximum=300, step=1, default=5, label="TopK")
+                    thr_slider = gr.Slider(minimum=0, maximum=1, step=0.05, value=0.5, label="Thresh")
+                    topk_slider = gr.Slider(minimum=0, maximum=300, step=1, value=5, label="TopK")
+                    vis_clipseg = gr.Checkbox(label="ClipSeg", info="visualize clip seg feature"),
                     btn = gr.Button("Go!")
                     # btn2 = gr.Button("Button 2")
-                btn.click(self.set_and_segment, inputs=[inp_img, inp_prompt, topk_slider, thr_slider], outputs=out_img)
+                btn.click(self.set_and_segment, inputs=[inp_img, inp_prompt, topk_slider, thr_slider, vis_clipseg], outputs=out_img)
             # self.demo = gr.Interface(fn=self.set_and_segment, inputs=[gr.Image(type="numpy").style(height=500, width=700), "text"], outputs=gr.Image().style(height=500, width=700))
         self.demo.launch(share=True)
 

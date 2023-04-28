@@ -44,7 +44,7 @@ def get_embeddings(image_path, model, transformed_size=(512, 512)):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_path", type=str, default="/data/machine/data/flame_salmon_image/images/")
-    parser.add_argument("--save_path", type=str, default="/data/machine/data/flame_salmon_image/sam_features/")
+    parser.add_argument("--save_path", type=str, default="/data/machine/data/flame_salmon_image/clipseg_features/")
 
     args = parser.parse_args()
     if not os.path.exists(args.save_path):

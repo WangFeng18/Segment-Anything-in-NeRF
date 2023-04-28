@@ -411,10 +411,8 @@ class CLIPDensePredT(CLIPDenseBase):
             x_inp = inp_image
             bs = inp_image.shape[0]
 
-            t1 = time.time()
             visual_q, activations, _ = self.visual_forward(x_inp, extract_layers=[0] + list(self.extract_layers))
             transformed_image_size = x_inp.shape[2:]
-            print(f"clip cost: {time.time() - t1}")
             # if return_clip_feature:
             #     return {
             #         "visual_q": visual_q,
@@ -423,12 +421,9 @@ class CLIPDensePredT(CLIPDenseBase):
             #     }
             activation1 = activations[0]
             activations = activations[1:]
-            t1 = time.time()
 
             cond = self.get_cond_vec(conditional, bs)
-            print(f"cond cost: {time.time() - t1}")
 
-            t1 = time.time()
             _activations = activations[::-1] if not self.rev_activations else activations
             if debug:
                 for _i in range(len(_activations)):
@@ -464,9 +459,7 @@ class CLIPDensePredT(CLIPDenseBase):
             bs = 1
             transformed_image_size = inp_feature["transformed_image_size"]
             activation1 = None
-            t1 = time.time()
             cond = self.get_cond_vec(conditional, bs)
-            print(f"cond cost: {time.time() - t1}")
             a = None
             for i, (reduced_activation, block, reduce) in enumerate(
                 zip(reduced_activations, self.blocks, self.reduces)
@@ -500,7 +493,6 @@ class CLIPDensePredT(CLIPDenseBase):
             a = self.upsample_proj(a)
             a = nnf.interpolate(a, transformed_image_size, mode="bilinear")
 
-        print(f"clipseg cost: {time.time() - t1}")
         if return_features:
             return a, visual_q, cond, [activation1] + activations
         else:
