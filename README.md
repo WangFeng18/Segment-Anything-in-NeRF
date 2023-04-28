@@ -9,3 +9,7 @@ This repo provides:
 
 https://user-images.githubusercontent.com/43294876/235158631-c2384188-81cb-40f9-a7e4-e635c9912c8c.mp4
 
+### Promptable Segmentation for NeRF
+
+https://user-images.githubusercontent.com/43294876/235242529-16e224c2-6219-432c-8537-f821408f0533.mp4
+
