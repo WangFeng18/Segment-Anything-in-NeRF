@@ -16,11 +16,11 @@ This repo provides a support of language prompts for SAM, by combinning ClipSeg 
 
 ### Getting Started
 
-#### SAM with Language prompts
+#### 1. SAM with Language prompts
 
 We provide the usage of language promptable SAM in samclip.ipynb
 
-#### Segment Anything in NeRF
+#### 2. Segment Anything in NeRF
 
 Without 3D feature distillation
 ```python
