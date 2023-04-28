@@ -385,9 +385,9 @@ export default function ViewerWindow(props) {
     <>
       <RenderWindow />
       <div className="canvas-container-main" ref={myRef}>
-        <div className="ViewerWindow-camera-toggle">
+        {/* <div className="ViewerWindow-camera-toggle">
           <CameraToggle />
-        </div>
+        </div> */}
         <div>
           <input className="search-input fade-in" id="search-input" type="text" placeholder='Search' value={searchText} onKeyDown={handleKeyDown} style={{ display: 'none' }} />
           {/* <div class="td" id="s-cover">

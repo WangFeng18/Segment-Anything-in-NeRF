@@ -289,6 +289,9 @@ class ViewerState:
         else:
             if self.camera_message is not None:
                 if len(self.camera_message.xs) != len(message.xs):
+                    print("&" * 30)
+                    print("should rerender")
+                    print("&" * 30)
                     self.camera_message = message
                     self.render_statemachine.action(RenderAction("rerender", self.camera_message))
             self.camera_message = message
