@@ -102,9 +102,20 @@ class LanguageSAM:
         self.clipseg_feature = feat
         feat = rearrange(feat, "(h p1) (w p2) -> h w (p1 p2)", p1=16, p2=16).mean(dim=-1)
         # inds = torch.nonzero(feat == feat.max())
-        inds = feat.flatten().topk(k=point_num)[1]
-        inds = torch.stack([torch.div(inds, feat.shape[1], rounding_mode="trunc"), inds % feat.shape[1]], dim=-1)
-        inds = inds[feat[inds[..., 0], inds[..., 1]] > threshold]
+        inds = torch.nonzero(feat > threshold)
+        if inds.shape[0] > 0:
+            valid_feat = feat[inds[..., 0], inds[..., 1]]
+            if point_num > 0:
+                _ind = valid_feat.topk(k=point_num)[1]
+            else:
+                _ind = torch.randperm(valid_feat.shape[0])[:-point_num]
+            inds = inds[_ind]
+
+        # origin pipeline
+        # inds = feat.flatten().topk(k=point_num)[1]
+        # inds = torch.stack([torch.div(inds, feat.shape[1], rounding_mode="trunc"), inds % feat.shape[1]], dim=-1)
+        # inds = inds[feat[inds[..., 0], inds[..., 1]] > threshold]
+        # end origin pipeline
 
         inds[..., 0] = inds[..., 0] / feat.shape[0] * self.image.shape[0]
         inds[..., 1] = inds[..., 1] / feat.shape[1] * self.image.shape[1]
@@ -146,7 +157,7 @@ class LanguageSAM:
                 with gr.Row():
                     inp_prompt = gr.Textbox(lines=1, label="Prompt").style(width="25%")
                     thr_slider = gr.Slider(minimum=0, maximum=1, step=0.05, value=0.5, label="Thresh")
-                    topk_slider = gr.Slider(minimum=0, maximum=300, step=1, value=5, label="TopK")
+                    topk_slider = gr.Slider(minimum=-30, maximum=30, step=1, value=5, label="TopK")
                     vis_clipseg = gr.Checkbox(label="ClipSeg", info="visualize clip seg feature")
                     btn = gr.Button("Go!")
                     # btn2 = gr.Button("Button 2")

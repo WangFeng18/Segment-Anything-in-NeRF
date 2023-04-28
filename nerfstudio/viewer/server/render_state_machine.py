@@ -230,8 +230,8 @@ class RenderStateMachine(threading.Thread):
                             print("Seach Text Case\n")
                             text_prompt = self.viewer.search_text
                             points = None
-                            threshold = 0.5
-                            topk = 5
+                            threshold = self.viewer.control_panel.threshold
+                            topk = int(self.viewer.control_panel.topk)
                             
                         outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrinsics_matrix, c2w=camera_to_world, text_prompt=text_prompt, topk=topk, thresh=threshold) 
                         print(outputs.keys())
