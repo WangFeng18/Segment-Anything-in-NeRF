@@ -45,7 +45,7 @@ def save_img(tensor, filename):
 
 SIZE = 4 # for h = 840
 
-def show_prompts(prompts, depth, intrin, c2w, img, prompts_3d, h=None):
+def show_prompts(prompts, depth, intrin, c2w, img, prompts_3d, h=None, t_reduce="min"):
     if len(prompts) == 0:
         return img 
     
@@ -69,7 +69,10 @@ def show_prompts(prompts, depth, intrin, c2w, img, prompts_3d, h=None):
     rays_d = torch.sum(coords * rotation, dim=-1)
     rays_d /= rays_d.norm(dim=-1, keepdim=True)
     rays_o = c2w[:3, 3].unsqueeze(0).repeat(coords.shape[0], 1)
-    ts = ((prompts_3d - rays_o) / rays_d).mean(dim=-1)
+    if t_reduce == "min":
+        ts = ((prompts_3d - rays_o) / rays_d).min(dim=-1)[0]
+    elif t_reduce == "mean":
+        ts = ((prompts_3d - rays_o) / rays_d).mean(dim=-1)
     # print(((prompts_3d - rays_o) / rays_d))
     # print(ts.shape)
 
