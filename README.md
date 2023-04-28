@@ -1,10 +1,7 @@
 ## SAM-NeRF: A Simple Baseline for Segmenting Anything in NeRF with Language Prompts.
 
 
-
-
-https://user-images.githubusercontent.com/43294876/235263975-02c58d1f-531d-45c4-b452-a2ef84f7ece8.mp4
-
+https://user-images.githubusercontent.com/43294876/235264056-9b242b98-9523-42be-9c34-7ddde7ff7480.mp4
 
 
 https://user-images.githubusercontent.com/43294876/235252013-b6977241-d9af-4dfd-bb2d-d21f30391057.mp4
