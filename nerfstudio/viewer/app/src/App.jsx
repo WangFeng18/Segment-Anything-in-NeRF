@@ -18,7 +18,7 @@ export default function App() {
       <CssBaseline enableColorScheme />
       <div className="App">
         {/* The banner at the top of the page. */}
-        {/* <Banner /> */}
+        <Banner />
         <div className="App-body">
           {/* Order matters here. The viewer window must be rendered first. */}
           <ViewerWindow sceneTree={sceneTree} />
