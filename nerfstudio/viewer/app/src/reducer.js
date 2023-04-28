@@ -49,6 +49,7 @@ const initialState = {
     use_sam: false,
     xs: [],
     ys: [],
+    sam_points_changed: false,
 
     // for sam text prompt
     text_prompt: '',

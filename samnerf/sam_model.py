@@ -427,6 +427,8 @@ class SAMModel(NerfactoModel):
         else:
             prompt = text_prompt
 
+        print(self.prompts)
+
         outputs["masked_rgb"] = outputs["rgb"]
         if points is None:
             self.prompts = None
@@ -553,9 +555,6 @@ class SAMModel(NerfactoModel):
                 outputs["masked_rgb"] = show_prompts(
                     prompts, outputs["depth"], intrin, c2w, outputs["masked_rgb"], self.prompts[legal], h
                 )
-        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        print(outputs["masked_rgb"].shape)
-        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         print(f"clipseg + sam cost {time.time() - _t1}s")
         return outputs
 

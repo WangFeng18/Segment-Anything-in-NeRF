@@ -118,6 +118,7 @@ class RenderStateMachine(threading.Thread):
             # ignore steps if:
             #  1. we are in low_moving state
             #  2. the current next_action is move, static, or rerender
+            # For debug
             return
         elif self.next_action == "rerender":
             # never overwrite rerenders
@@ -127,8 +128,12 @@ class RenderStateMachine(threading.Thread):
             self.next_action = action
 
         # handle interrupt logic
-        if self.state == "high" and self.next_action.action in ("move",):
+        if self.state in ["high", "low_static"] and self.next_action.action in ("move", "rerender"):
             self.interrupt_render_flag = True
+        print("&"*30)
+        print(self.state)
+        print(self.next_action.action)
+        print("&"*30)
         self.render_trigger.set()
 
     def _render_img(self, action: RenderAction):
@@ -137,6 +142,9 @@ class RenderStateMachine(threading.Thread):
         Args:
             cam_msg: the camera message to render
         """
+
+        print("into render")
+        print(action.cam_msg)
         cam_msg = action.cam_msg if action.cam_msg is not None else self.last_cam_msg
 
         viewer_utils.update_render_aabb(
@@ -212,6 +220,7 @@ class RenderStateMachine(threading.Thread):
                         topk = 0
                         if self.viewer.use_sam:
                             points = get_prompt_points(cam_msg, image_height, image_width)
+                            self.viewer.n_points_sam = len(points)
                             print("SAM case\n")
                             # outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrinsics_matrix, c2w=camera_to_world)
                         if self.viewer.use_text_prompt:
@@ -257,7 +266,6 @@ class RenderStateMachine(threading.Thread):
             if action is None:
                 continue
             self.next_action = None
-            print(self.state)
             if self.state == "high" and action.action == "static":
                 # if we are in high res and we get a static action, we don't need to do anything
                 # TODO currently a workaround
@@ -289,7 +297,7 @@ class RenderStateMachine(threading.Thread):
                 continue
             except Exception as e:
                 # breakpoint()
-                print(e.message)
+                print("Someother error")
             # breakpoint()
             self._send_output_to_viewer(outputs)
             # if we rendered a static low res, we need to self-trigger a static high-res

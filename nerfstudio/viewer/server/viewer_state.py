@@ -127,6 +127,8 @@ class ViewerState:
         self.use_text_prompt = False
         self.use_fixed_fps = False
         self.use_search_text = False
+
+        self.n_points_sam = 0
         
         self.text_prompt = ""
         self.threshold = 0.0
@@ -233,7 +235,8 @@ class ViewerState:
 
     def _clear_sam_pins(self, _) -> None:
         self.viser_server.clear_sam_pins()
-        # self.control_panel.output_render = "rgb"
+        print("Clear All pins")
+        self.n_points_sam = 0
         self.render_statemachine.action(action=RenderAction("rerender", None))
 
     def _fixed_fps_cb(self, _) -> None:
@@ -281,6 +284,10 @@ class ViewerState:
     def _handle_camera_update(self, message: NerfstudioMessage) -> None:
         """Handle camera update message from viewer."""
         assert isinstance(message, CameraMessage)
+        print("#"*40)
+        print(len(message.xs))
+        print("moving", message.is_moving)
+        print("#"*40)
         if message.is_moving:
             self.camera_message = message
             self.render_statemachine.action(RenderAction("move", self.camera_message))
@@ -288,13 +295,18 @@ class ViewerState:
                 self.training_state = "paused"
         else:
             if self.camera_message is not None:
-                if len(self.camera_message.xs) != len(message.xs):
+                if self.n_points_sam != len(message.xs):
                     print("&" * 30)
                     print("should rerender")
                     print("&" * 30)
                     self.camera_message = message
                     self.render_statemachine.action(RenderAction("rerender", self.camera_message))
+                    return
             self.camera_message = message
+            print("#"*40)
+            print("here")
+            print(len(self.camera_message.xs))
+            print("#"*40)
             self.render_statemachine.action(RenderAction("static", self.camera_message))
             self.training_state = self.train_btn_state
 
