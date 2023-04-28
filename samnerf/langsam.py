@@ -127,7 +127,9 @@ class LanguageSAM:
             prompt=[pmt], point_num=pts, threshold=thres, points=points, output_format=output_format
         )
         if vis_clipseg:
-            return self.clipseg_feature.cpu().detach().numpy()
+            ret = (self.clipseg_feature.cpu().detach().numpy() * 255).astype(np.uint8)
+            ret = cv2.applyColorMap(ret, cv2.COLORMAP_TURBO)
+            return ret
         else:
             return mskimg
 
@@ -145,7 +147,7 @@ class LanguageSAM:
                     inp_prompt = gr.Textbox(lines=1, label="Prompt").style(width="25%")
                     thr_slider = gr.Slider(minimum=0, maximum=1, step=0.05, value=0.5, label="Thresh")
                     topk_slider = gr.Slider(minimum=0, maximum=300, step=1, value=5, label="TopK")
-                    vis_clipseg = gr.Checkbox(label="ClipSeg", info="visualize clip seg feature"),
+                    vis_clipseg = gr.Checkbox(label="ClipSeg", info="visualize clip seg feature")
                     btn = gr.Button("Go!")
                     # btn2 = gr.Button("Button 2")
                 btn.click(self.set_and_segment, inputs=[inp_img, inp_prompt, topk_slider, thr_slider, vis_clipseg], outputs=out_img)
