@@ -23,6 +23,7 @@ CONSOLE = Console(width=120)
 class SAMDataManagerConfig(VanillaDataManagerConfig):
     _target: Type = field(default_factory=lambda: SAMDataManager)
     sam_feature_path: str = "Path to the features extracted by SAM"
+    distill_sam: bool = True
     use_dino_feature: bool = False
     use_clipseg_feature: bool = False
     dino_feature_path: str = "Path to the features extracted by DINO"
@@ -45,18 +46,19 @@ class SAMDataManager(VanillaDataManager):  # pylint: disable=abstract-method
         )
         self.includes_time = False
 
-        sam_feature_filenames = [
-            os.path.join(
-                os.path.dirname(os.path.dirname(name)), "sam_features", os.path.basename(name).split(".")[0] + ".npy"
+        if self.config.distill_sam:
+            sam_feature_filenames = [
+                os.path.join(
+                    os.path.dirname(os.path.dirname(name)), "sam_features", os.path.basename(name).split(".")[0] + ".npy"
+                )
+                for name in self.train_dataparser_outputs.image_filenames
+            ]
+            self.sam_loader = FeatureDataloader(
+                device,
+                npy_paths=sam_feature_filenames,
+                image_shape=list(self.train_dataset[0]["image"].shape[:2]),
+                patch_size=self.config.patch_size,
             )
-            for name in self.train_dataparser_outputs.image_filenames
-        ]
-        self.sam_loader = FeatureDataloader(
-            device,
-            npy_paths=sam_feature_filenames,
-            image_shape=list(self.train_dataset[0]["image"].shape[:2]),
-            patch_size=self.config.patch_size,
-        )
 
         if self.config.use_dino_feature:
             dino_feature_filenames = [
@@ -101,11 +103,12 @@ class SAMDataManager(VanillaDataManager):  # pylint: disable=abstract-method
         ray_indices = batch["indices"]
 
         # requires to calculate the center indices
-        center_indices = ray_indices.reshape(-1, self.config.patch_size, self.config.patch_size, 3)[
-            :, self.config.patch_size // 2, self.config.patch_size // 2, :
-        ]
         ray_bundle = self.train_ray_generator(ray_indices)
-        batch["sam"] = self.sam_loader(center_indices)
+        if self.config.distill_sam:
+            center_indices = ray_indices.reshape(-1, self.config.patch_size, self.config.patch_size, 3)[
+                :, self.config.patch_size // 2, self.config.patch_size // 2, :
+            ]
+            batch["sam"] = self.sam_loader(center_indices)
         if self.config.use_dino_feature:
             batch["dino"] = self.dino_loader(ray_indices)
         if self.config.use_clipseg_feature:
