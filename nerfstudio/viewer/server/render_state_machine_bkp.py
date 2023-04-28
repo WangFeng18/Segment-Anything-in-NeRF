@@ -97,11 +97,6 @@ class RenderStateMachine(threading.Thread):
         Args:
             action: the action to take
         """
-        print("=" * 20)
-        print(self.state)
-        print(action.action)
-        print(self.next_action)
-        print("=" * 20)
         if self.next_action is None:
             self.next_action = deepcopy(action)
         elif action.action == "step" and (
@@ -186,9 +181,6 @@ class RenderStateMachine(threading.Thread):
 
             with TimeWriter(None, None, write=False) as vis_t:
                 self.viewer.get_model().eval()
-                print("="*20)
-                print(self.viewer.get_model().training)
-                print("="*20)
                 step = self.viewer.step
                 if self.viewer.control_panel.crop_viewport:
                     color = self.viewer.control_panel.background_color
@@ -223,7 +215,6 @@ class RenderStateMachine(threading.Thread):
             self.render_trigger.wait()
             self.render_trigger.clear()
             action = self.next_action
-            print(action)
             assert action is not None, "Action should never be None at this point"
             self.next_action = None
             if self.state == "high" and action.action == "static":
@@ -241,11 +232,9 @@ class RenderStateMachine(threading.Thread):
             except viewer_utils.IOChangeException:
                 # breakpoint()
                 # if we got interrupted, don't send the output to the viewer
-                print("Error and Error and Error")
                 continue
             except Exception as e:
                 # breakpoint()
-                print(e.message)
             # breakpoint()
             self._send_output_to_viewer(outputs)
             # if we rendered a static low res, we need to self-trigger a static high-res

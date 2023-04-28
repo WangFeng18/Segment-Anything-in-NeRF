@@ -7,10 +7,10 @@ https://user-images.githubusercontent.com/43294876/235251968-4b9103ee-a6ca-4406-
 https://user-images.githubusercontent.com/43294876/235252013-b6977241-d9af-4dfd-bb2d-d21f30391057.mp4
 
 
-This repo provides a support of language prompts for SAM, by combinning ClipSeg and SAM. We also provides a simple baseline for connecting SAM with NeRF, as well as a simple SAM feature distillation method. Specifically, we provide:
+This repo provides a support of language prompts for SAM, by combinning ClipSeg and SAM. We also provides a simple baseline for connecting SAM with NeRF, as well as a 2D-to-3D SAM feature distillation method. Specifically, we provide:
 
-> - A simple extension of Segmenta Anything for incorporating language prompt, by combining ClipSeg with SAM, the inference of ClipSeg features are very fast, costing only 0.04s per image which brings neglectable overheads.
-> - A simple implmentation of combining segment-anything with NeRF, providing the function of locking 3D objects for different views, and segmentation in 3D by language and point prompts.
+> - An extension of Segmenta Anything for incorporating language prompt, by combining ClipSeg with SAM, the inference of ClipSeg features are very fast, costing only 0.04s per image which brings neglectable overheads.
+> - An implmentation of combining segment-anything with NeRF, providing the function of locking 3D objects for different views, and segmentation in 3D by language and point prompts.
 >  - An implementation of distilling SAM and ClipSeg features into 3D fields, in this pipeline, the image encoders of SAM and ClipSeg are replaced by a volumetric rendering process which reduces the time of image encoding (mainly coming from the much lower rendering resolutions, we believe the image encoder will give much acceleration and results through reducing the input image size). Besides, we implement a patch-based rendering and aggregate neighbouring features to make up the loss of inner-interactions of patches, which improve the mask qualities.
 
 ### Getting Started

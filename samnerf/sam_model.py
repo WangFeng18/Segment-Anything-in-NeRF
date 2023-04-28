@@ -157,7 +157,7 @@ class SAMModelConfig(NerfactoModelConfig):
     kernel_size: int = 3
 
     distill_sam: bool = True
-    sam_checkpoint: str = "samnerf/segment-anything/sam_vit_h_4b8939.pth"
+    sam_checkpoint: str = "samnerf/segment_anything/sam_vit_h_4b8939.pth"
     sharpening_temperature: float = 10.0
 
 
@@ -351,8 +351,6 @@ class SAMModel(NerfactoModel):
         Args:
             camera_ray_bundle: ray bundle to calculate outputs over
         """
-        _t1 = time.time()
-
         num_rays_per_chunk = self.config.eval_num_rays_per_chunk
         image_height, image_width = camera_ray_bundle.origins.shape[:2]
         num_rays = len(camera_ray_bundle)
@@ -365,9 +363,7 @@ class SAMModel(NerfactoModel):
             for output_name, output in outputs.items():  # type: ignore
                 outputs_lists[output_name].append(output)
         sz = camera_ray_bundle.shape
-        print(f"nerf cost {time.time() - _t1}s")
 
-        _t1 = time.time()
         # for sam distillation
         if self.config.distill_sam:
             feature_h, feature_w = get_feature_size(image_height, image_width)
@@ -427,13 +423,10 @@ class SAMModel(NerfactoModel):
         else:
             prompt = text_prompt
 
-        print(self.prompts)
-
         outputs["masked_rgb"] = outputs["rgb"]
         if points is None:
             self.prompts = None
         else:
-            print("points:", points)
             assert intrin is not None
             assert c2w is not None
             fx = intrin[0, 0]
@@ -480,7 +473,6 @@ class SAMModel(NerfactoModel):
         if self.prompts is not None:
             h, w = outputs["rgb"].shape[:2]
             prompts = project(intrin, c2w, self.prompts)
-            print("prompts", prompts)
 
             bounds = torch.tensor([[w, h]]).to(prompts)
             legal = torch.logical_and(prompts >= 0, prompts < bounds).all(dim=-1)
@@ -491,7 +483,6 @@ class SAMModel(NerfactoModel):
             input_points = prompts
 
         if self.config.distill_sam and "sam" in outputs:
-            print("case1")
             self.predictor.set_feature(outputs["sam"].permute(2, 0, 1), original_image_size=(image_height, image_width))
             if self.config.use_clipseg_feature:
                 acts = []
@@ -536,7 +527,6 @@ class SAMModel(NerfactoModel):
                         prompts, outputs["depth"], intrin, c2w, outputs["masked_rgb"], self.prompts[legal], h
                     )
         elif not self.config.distill_sam:
-            print("case2")
             downsample_for_perception = 4
             inp_for_percept = (outputs["rgb"].cpu().numpy() * 255).astype(np.uint8)
             msk_img = self.lang_sam.set_and_segment(
@@ -555,7 +545,6 @@ class SAMModel(NerfactoModel):
                 outputs["masked_rgb"] = show_prompts(
                     prompts, outputs["depth"], intrin, c2w, outputs["masked_rgb"], self.prompts[legal], h
                 )
-        print(f"clipseg + sam cost {time.time() - _t1}s")
         return outputs
 
     def get_image_metrics_and_images(

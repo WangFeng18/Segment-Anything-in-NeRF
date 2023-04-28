@@ -139,8 +139,6 @@ class RenderStateMachine(threading.Thread):
             cam_msg: the camera message to render
         """
 
-        print("into render")
-        print(action.cam_msg)
         cam_msg = action.cam_msg if action.cam_msg is not None else self.last_cam_msg
 
         viewer_utils.update_render_aabb(
@@ -217,13 +215,8 @@ class RenderStateMachine(threading.Thread):
                         if self.viewer.use_sam:
                             points = get_prompt_points(cam_msg, image_height, image_width)
                             self.viewer.n_points_sam = len(points)
-                            print("SAM case\n")
                             # outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrinsics_matrix, c2w=camera_to_world)
                         if self.viewer.use_text_prompt:
-                            print("Text Prompt SAM case\n")
-                            print("text prompts:", self.viewer.text_prompt)
-                            print("threshold:", self.viewer.threshold)
-                            print("topK:", self.viewer.topk)
                             text_prompt = self.viewer.text_prompt
                             threshold = self.viewer.threshold
                             topk = int(self.viewer.topk)
@@ -232,14 +225,12 @@ class RenderStateMachine(threading.Thread):
                             # outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle) 
 
                         if self.viewer.use_search_text:
-                            print("Seach Text Case\n")
                             text_prompt = self.viewer.search_text
                             points = None
                             threshold = self.viewer.control_panel.threshold
                             topk = int(self.viewer.control_panel.topk)
                             
                         outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrinsics_matrix, c2w=camera_to_world, text_prompt=text_prompt, topk=topk, thresh=threshold) 
-                        print(outputs.keys())
                         
                         self.viewer.get_model().train()
                 self.viewer.get_model().train()
@@ -278,9 +269,6 @@ class RenderStateMachine(threading.Thread):
                     t = time()
                     outputs = self._render_img(action)
                     t = time() - t
-                    print("+"*30)
-                    print(f"FPS: {1./t:.3f}")
-                    print("+"*30)
                     self.render_times.append(t)
                     self.viewer.fps = len(self.render_times) / sum(self.render_times)
                     self.viewer.viser_server.update_fps(self.viewer.fps)
@@ -289,11 +277,10 @@ class RenderStateMachine(threading.Thread):
             except viewer_utils.IOChangeException:
                 # breakpoint()
                 # if we got interrupted, don't send the output to the viewer
-                print("Error and Error and Error")
                 continue
             except Exception as e:
+                pass
                 # breakpoint()
-                print("Someother error")
             # breakpoint()
             self._send_output_to_viewer(outputs)
             # if we rendered a static low res, we need to self-trigger a static high-res

@@ -46,7 +46,7 @@ import yaml
 from rich.console import Console
 
 from nerfstudio.configs.config_utils import convert_markup_to_ansi
-from samnerf.samconfigs import AnnotatedBaseConfigUnion
+from samnerf.samconfigs_self import AnnotatedBaseConfigUnion
 from nerfstudio.engine.trainer import TrainerConfig
 from nerfstudio.utils import comms, profiler
 import nerfstudio

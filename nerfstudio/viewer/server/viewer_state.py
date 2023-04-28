@@ -235,7 +235,6 @@ class ViewerState:
 
     def _clear_sam_pins(self, _) -> None:
         self.viser_server.clear_sam_pins()
-        print("Clear All pins")
         self.n_points_sam = 0
         self.render_statemachine.action(action=RenderAction("rerender", None))
 
@@ -284,10 +283,6 @@ class ViewerState:
     def _handle_camera_update(self, message: NerfstudioMessage) -> None:
         """Handle camera update message from viewer."""
         assert isinstance(message, CameraMessage)
-        print("#"*40)
-        print(len(message.xs))
-        print("moving", message.is_moving)
-        print("#"*40)
         if message.is_moving:
             self.camera_message = message
             self.render_statemachine.action(RenderAction("move", self.camera_message))
@@ -296,17 +291,10 @@ class ViewerState:
         else:
             if self.camera_message is not None:
                 if self.n_points_sam != len(message.xs):
-                    print("&" * 30)
-                    print("should rerender")
-                    print("&" * 30)
                     self.camera_message = message
                     self.render_statemachine.action(RenderAction("rerender", self.camera_message))
                     return
             self.camera_message = message
-            print("#"*40)
-            print("here")
-            print(len(self.camera_message.xs))
-            print("#"*40)
             self.render_statemachine.action(RenderAction("static", self.camera_message))
             self.training_state = self.train_btn_state
 
@@ -362,12 +350,7 @@ class ViewerState:
         self.control_panel.threshold = message.threshold
 
     def _handle_search_text_message(self, message: SearchTextMessage):
-        print("+" * 20)
-        print(message.text)
-        print(message.switch_to_heat_map)
-        print("+" * 20)
         if message.switch_to_heat_map:
-            print("use heat map")
             self.render_output_before = self.control_panel.output_render if self.control_panel.output_render != "masked_rgb" else "rgb"
             self.use_search_text = True
             # TODO: add here the real render output for search heatmap
@@ -378,7 +361,6 @@ class ViewerState:
             # for disable search text and back to the previous mode
             self.use_search_text = False
             assert getattr(self, "render_output_before", None) is not None, "original mode should be stored, this is bug and should be report"
-            print(f"previous render: {self.render_output_before}")
             self.control_panel.output_render = self.render_output_before
             self.search_text = None
             self.render_statemachine.action(action=RenderAction("static", None))
@@ -475,10 +457,6 @@ class ViewerState:
                 render_freq = 30
             if step > self.last_step + render_freq:
                 self.last_step = step
-                # print(self.camera_message.xs)
-                # print(self.camera_message.ys)
-                # print("here")
-                # breakpoint()
                 # TODO modify here
                 self.render_statemachine.action(RenderAction("step", self.camera_message))
 

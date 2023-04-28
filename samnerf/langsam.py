@@ -21,8 +21,8 @@ class LanguageSAM:
         self.clipseg_model = clipseg_model
 
         sam_checkpoint = {
-            "vit_b": "samnerf/segment-anything/sam_vit_b_01ec64.pth",
-            "vit_h": "samnerf/segment-anything/sam_vit_h_4b8939.pth",
+            "vit_b": "samnerf/segment_anything/sam_vit_b_01ec64.pth",
+            "vit_h": "samnerf/segment_anything/sam_vit_h_4b8939.pth",
         }
         sam = sam_model_registry[sam_model](checkpoint=sam_checkpoint[sam_model])
         sam.to(device=device)
@@ -79,13 +79,12 @@ class LanguageSAM:
             image = img_path
             try:
                 if self.image is not None and isinstance(image, np.ndarray) and isinstance(self.image, np.ndarray) and (self.image == image).all():
-                    print("same image")
                     return
             except:
-                print(image==self.image)
+                pass
+                # print(image==self.image)
 
         self.image = image
-        print(type(image))
         if isinstance(self.image, np.ndarray):
             image_pil = Image.fromarray(self.image)
             self.image_clipseg = self.transform(image_pil).unsqueeze(0)
@@ -149,7 +148,6 @@ class LanguageSAM:
         # css = ".output_image {height: 40rem !important; width: 100% !important;}"
         # css = ".output-image, .input-image, .image-preview {height: 600px !important}"
         if not hasattr(self, "demo"):
-            print("creating gradio interface")
             gr.Markdown("## Segment Anything with Language propmpts")
             with gr.Blocks() as self.demo:
                 with gr.Row():
@@ -164,7 +162,7 @@ class LanguageSAM:
                     # btn2 = gr.Button("Button 2")
                 btn.click(self.set_and_segment, inputs=[inp_img, inp_prompt, topk_slider, thr_slider, vis_clipseg], outputs=out_img)
             # self.demo = gr.Interface(fn=self.set_and_segment, inputs=[gr.Image(type="numpy").style(height=500, width=700), "text"], outputs=gr.Image().style(height=500, width=700))
-        self.demo.launch(share=True)
+        self.demo.launch(share=False)
 
     def close_gradio(self):
         self.demo.close()
