@@ -45,12 +45,23 @@ const initialState = {
     step: 0,
     eval_res: '?',
 
-    use_sam: true,
+    // for sam point prompt
+    use_sam: false,
     xs: [],
     ys: [],
 
+    // for sam text prompt
     text_prompt: '',
     threshold: 0.0,
+
+    search_text: 'a table',
+
+    // for video nerf
+    target_fps: 30,
+
+    // running status
+    // update by receiving message from backend
+    real_fps: -1.0,
 
     // export options
     clipping_enabled: true,

@@ -36,6 +36,8 @@ if TYPE_CHECKING:
     from nerfstudio.viewer.server.viewer_state import ViewerState
 
 import numpy as np
+from time import time
+from collections import deque
 
 RenderStates = Literal["low_move", "low_static", "high"]
 RenderActions = Literal["rerender", "move", "static", "step"]
@@ -95,6 +97,7 @@ class RenderStateMachine(threading.Thread):
         self.interrupt_render_flag = False
         self.last_cam_msg = None
         self.daemon = True
+        self.render_times = deque([], maxlen=3)
 
     def action(self, action: RenderAction):
         """Takes an action and updates the state machine
@@ -187,9 +190,6 @@ class RenderStateMachine(threading.Thread):
 
             with TimeWriter(None, None, write=False) as vis_t:
                 self.viewer.get_model().eval()
-                print("="*20)
-                print(self.viewer.get_model().training)
-                print("="*20)
                 step = self.viewer.step
                 if self.viewer.control_panel.crop_viewport:
                     color = self.viewer.control_panel.background_color
@@ -214,7 +214,7 @@ class RenderStateMachine(threading.Thread):
                             points = get_prompt_points(cam_msg, image_height, image_width)
                             print("SAM case\n")
                             # outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrinsics_matrix, c2w=camera_to_world)
-                        elif self.viewer.use_text_prompt:
+                        if self.viewer.use_text_prompt:
                             print("Text Prompt SAM case\n")
                             print("text prompts:", self.viewer.text_prompt)
                             print("threshold:", self.viewer.threshold)
@@ -225,7 +225,14 @@ class RenderStateMachine(threading.Thread):
 
                             # outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, text_prompt=self.viewer.text_prompt, threshold=self.viewer.threshold)
                             # outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle) 
+
+                        if self.viewer.use_search_text:
+                            print("Seach Text Case\n")
+                            text_prompt = self.viewer.search_text
+                            points = None
+                            
                         outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrinsics_matrix, c2w=camera_to_world, text_prompt=text_prompt, topk=topk, thresh=threshold) 
+                        print(outputs.keys())
                         
                         self.viewer.get_model().train()
                 self.viewer.get_model().train()
@@ -261,8 +268,15 @@ class RenderStateMachine(threading.Thread):
             try:
                 # breakpoint()
                 with viewer_utils.SetTrace(self.check_interrupt):
-                    # breakpoint()
+                    t = time()
                     outputs = self._render_img(action)
+                    t = time() - t
+                    print("+"*30)
+                    print(f"FPS: {1./t:.3f}")
+                    print("+"*30)
+                    self.render_times.append(t)
+                    self.viewer.fps = len(self.render_times) / sum(self.render_times)
+                    self.viewer.viser_server.update_fps(self.viewer.fps)
                     if action.cam_msg is not None:
                         self.last_cam_msg = action.cam_msg
             except viewer_utils.IOChangeException:

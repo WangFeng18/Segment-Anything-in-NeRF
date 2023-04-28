@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -18,6 +18,8 @@ import {
   ViserWebSocketContext,
 } from '../WebSocket/ViserWebSocket';
 import store from '../../store';
+import { element } from 'prop-types';
+import { RestaurantMenu } from '@mui/icons-material';
 
 function CameraToggle() {
   const dispatch = useDispatch();
@@ -111,6 +113,7 @@ export default function ViewerWindow(props) {
   const labelRenderer = sceneTree.metadata.labelRenderer;
 
   const myRef = useRef(null);
+  const dispatch = useDispatch();
   const viser_websocket = useContext(ViserWebSocketContext);
   const field_of_view = useSelector(
     (state) => state.renderingState.field_of_view,
@@ -123,6 +126,75 @@ export default function ViewerWindow(props) {
 
   const xs = useSelector((state) => state.renderingState.xs);
   const ys = useSelector((state) => state.renderingState.ys);
+
+  // const search_text = useSelector((state) => state.renderingState.search_text);
+
+  const [searchText, setSearchText] = useState('a table');
+
+  function handleInputChange(event) {
+    setSearchText(event.target.value);
+  }
+
+  const sendSearchTextMessage = makeThrottledMessageSender(
+    viser_websocket,
+    25,
+  );
+
+  function handleInputChange(event) {
+  }
+
+  function handleKeyDown(event) {
+    // TODO:
+    // when key is "ctrl + F", toggle display and switch the output render option
+    // when key is "enter", send search text to backend
+    // if (event.ctrlKey && event.key == 'f') {
+    //   if (event.target.style.display === 'none') {
+    //     event.target.style.display = 'block';
+    //   } else {
+    //     event.target.style.display = 'none';
+    //   }
+    // }
+    if (event.ctrlKey && event.key === 'f') {
+      event.preventDefault();
+      element.style.display = 'none';
+      sendSearchTextMessage({
+        type: 'SearchTextMessage',
+        text: '',
+        switch_to_heat_map: false,
+      });
+      return;
+    }
+    if (event.key.length === 1) {
+      let newText = event.target.value + event.key;
+      setSearchText(newText);
+      return;
+    }
+    if (event.keyCode === 8) {
+      event.preventDefault();
+      const element = event.target;
+      const selectionStart = element.selectionStart;
+      const selectionEnd = element.selectionEnd;
+      const value = element.value;
+      const newValue = value.slice(0, selectionStart - 1) + value.slice(selectionEnd);
+      element.value = newValue;
+      element.selectionStart = selectionStart - 1;
+      element.selectionEnd = selectionStart - 1;
+      setSearchText(newText);
+    }
+    if (event.key === 'Enter') {
+      // dispatch({
+      //   type: 'write',
+      //   path: 'renderingState/search_text',
+      //   data: event.target.value,
+      // });
+      // and send message to backend
+      sendSearchTextMessage({
+        type: 'SearchTextMessage',
+        text: event.target.value,
+        switch_to_heat_map: true,
+      });
+    }
+  }
 
   // listen to the viewport width
   const size = new THREE.Vector2();
@@ -315,6 +387,15 @@ export default function ViewerWindow(props) {
       <div className="canvas-container-main" ref={myRef}>
         <div className="ViewerWindow-camera-toggle">
           <CameraToggle />
+        </div>
+        <div>
+          <input className="search-input fade-in" id="search-input" type="text" placeholder='Search' value={searchText} onKeyDown={handleKeyDown} style={{ display: 'none' }} />
+          {/* <div class="td" id="s-cover">
+            <button type="submit" id="ss-button">
+              <div id="s-circle"></div>
+              <span></span>
+            </button>
+          </div> */}
         </div>
       </div>
       <div className="ViewerWindow-buttons" style={{ display: 'none' }}>

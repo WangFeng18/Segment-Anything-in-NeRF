@@ -57,6 +57,8 @@ from nerfstudio.viewer.viser.messages import (
     TrainingStateMessage,
     TextPromptMessage,
     ThresholdMessage,
+    FPSMessage,
+    SearchTextMessage,
 )
 
 if TYPE_CHECKING:
@@ -124,10 +126,15 @@ class ViewerState:
         self.use_sam = False
         self.use_text_prompt = False
         self.use_fixed_fps = False
+        self.use_search_text = False
         
         self.text_prompt = ""
         self.threshold = 0.0
         self.topk = 5
+
+        self.search_text = None
+
+        self.fps = -1.0
 
         # viewer specific variables
         self.output_type_changed = True
@@ -151,6 +158,7 @@ class ViewerState:
 
         self.viser_server.register_handler(SamMessage, self._handle_sam_message)
         self.viser_server.register_handler(ClearSamPinsMessage, self._handle_clear_sam_pins_message)
+        self.viser_server.register_handler(SearchTextMessage, self._handle_search_text_message)
 
         self.control_panel = ControlPanel(
             self.include_time,
@@ -183,7 +191,6 @@ class ViewerState:
             nested_folder_install(folder_labels, element)
 
         self.render_statemachine = RenderStateMachine(self)
-        print("\nIn Viewer State\n")
         self.render_statemachine.start()
 
     def _output_type_change(self, _):
@@ -225,7 +232,7 @@ class ViewerState:
 
     def _clear_sam_pins(self, _) -> None:
         self.viser_server.clear_sam_pins()
-        self.control_panel.output_render = "rgb"
+        # self.control_panel.output_render = "rgb"
         self.render_statemachine.action(action=RenderAction("static", None))
 
     def _fixed_fps_cb(self, _) -> None:
@@ -332,6 +339,26 @@ class ViewerState:
 
     def _handle_threshold_message(self, message: ThresholdMessage):
         self.control_panel.threshold = message.threshold
+
+    def _handle_search_text_message(self, message: SearchTextMessage):
+        print("+" * 20)
+        print(message.text)
+        print(message.switch_to_heat_map)
+        print("+" * 20)
+        if message.switch_to_heat_map:
+            print("use heat map")
+            self.render_output_before = self.control_panel.output_render if self.control_panel.output_render != "clipseg_feature" else "rgb"
+            self.use_search_text = True
+            # TODO: add here the real render output for search heatmap
+            self.control_panel.output_render = "clipseg_feature"
+            self.search_text = message.text
+        else:
+            # for disable search text and back to the previous mode
+            self.use_search_text = False
+            assert getattr(self, "render_output_before", None) is not None, "original mode should be stored, this is bug and should be report"
+            print(f"previous render: {self.render_output_before}")
+            self.control_panel.output_render = self.render_output_before
+            self.search_text = None
 
     @property
     def training_state(self) -> Literal["training", "paused", "completed"]:

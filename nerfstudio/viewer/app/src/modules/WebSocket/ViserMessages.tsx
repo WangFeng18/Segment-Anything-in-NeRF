@@ -133,6 +133,15 @@ interface ThresholdMessage {
   type: 'ThresholdMessage';
   threshold: number;
 }
+interface FPSMessage {
+  type: 'FPSMessage';
+  fps: number;
+}
+interface SearchTextMessage {
+  type: 'SearchTextMessage';
+  text: String;
+  switch_to_heat_map: Boolean;
+}
 
 export type Message =
   | BackgroundImageMessage
@@ -158,4 +167,6 @@ export type Message =
   | SamMessage
   | ClearSamPinsMessage
   | TextPromptMessage
-  | ThresholdMessage;
+  | ThresholdMessage
+  | FPSMessage
+  | SearchTextMessage;

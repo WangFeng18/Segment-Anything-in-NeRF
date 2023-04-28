@@ -422,6 +422,9 @@ class MessageApi(abc.ABC):
             )
         )
 
+    def update_fps(self, fps: float):
+        self._queue(messages.FPSMessage(fps))
+
     def update_scene_box(self, scene_box: SceneBox) -> None:
         """Update the scene box.
 

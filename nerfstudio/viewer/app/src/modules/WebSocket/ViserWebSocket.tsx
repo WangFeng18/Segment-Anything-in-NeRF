@@ -289,12 +289,12 @@ function handleMessage(
         type: 'write',
         path: 'renderingState/xs',
         data: [],
-      }); 
+      });
       dispatch({
         type: 'write',
         path: 'renderingState/ys',
         data: [],
-      }); 
+      });
       break;
     }
     case 'TextPromptMessage': {
@@ -310,6 +310,14 @@ function handleMessage(
         type: 'write',
         path: 'renderingState/threshold',
         data: message.threshold,
+      });
+      break;
+    }
+    case 'FPSMessage': {
+      dispatch({
+        type: 'write',
+        path: 'renderingState/real_fps',
+        data: message.fps,
       });
       break;
     }
