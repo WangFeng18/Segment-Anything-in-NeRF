@@ -140,6 +140,7 @@ class LanguageSAM:
         if vis_clipseg:
             ret = (self.clipseg_feature.cpu().detach().numpy() * 255).astype(np.uint8)
             ret = cv2.applyColorMap(ret, cv2.COLORMAP_TURBO)
+            ret = (ret * 0.5 + self.image * 0.5).astype(np.uint8)
             return ret
         else:
             return mskimg

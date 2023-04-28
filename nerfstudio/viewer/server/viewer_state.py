@@ -373,7 +373,7 @@ class ViewerState:
             # TODO: add here the real render output for search heatmap
             self.control_panel.output_render = "masked_rgb"
             self.search_text = message.text
-            self.render_statemachine.action(action=RenderAction("rerender", None))
+            self.render_statemachine.action(action=RenderAction("static", None))
         else:
             # for disable search text and back to the previous mode
             self.use_search_text = False
@@ -381,7 +381,7 @@ class ViewerState:
             print(f"previous render: {self.render_output_before}")
             self.control_panel.output_render = self.render_output_before
             self.search_text = None
-            self.render_statemachine.action(action=RenderAction("rerender", None))
+            self.render_statemachine.action(action=RenderAction("static", None))
 
     @property
     def training_state(self) -> Literal["training", "paused", "completed"]:

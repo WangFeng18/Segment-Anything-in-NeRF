@@ -130,10 +130,6 @@ class RenderStateMachine(threading.Thread):
         # handle interrupt logic
         if self.state in ["high", "low_static"] and self.next_action.action in ("move", "rerender"):
             self.interrupt_render_flag = True
-        print("&"*30)
-        print(self.state)
-        print(self.next_action.action)
-        print("&"*30)
         self.render_trigger.set()
 
     def _render_img(self, action: RenderAction):
@@ -261,7 +257,7 @@ class RenderStateMachine(threading.Thread):
             self.render_trigger.wait()
             self.render_trigger.clear()
             action = self.next_action
-            assert action is not None, "Action should never be None at this point"
+            # assert action is not None, "Action should never be None at this point"
             # TODO check this workaround
             if action is None:
                 continue
