@@ -97,7 +97,7 @@ class ControlPanel:
         self._clear_sam_pins = ViewerButton("Clear SAM pins", clear_sam_cb)
 
         self._text_prompt = ViewerText("Text Prompt", "man in black")
-        self._threshold = ViewerNumber("Threshold for ClipSeg", 1.0)
+        self._threshold = ViewerNumber("Threshold for ClipSeg", 0.5)
         self._topk = ViewerNumber("Number of text prompt points", 5)
         # TODO: add this cb_hook
         self._send_text_prompt = ViewerButton("Send Text Prompt", cb_hook=send_text_prompt_cb)

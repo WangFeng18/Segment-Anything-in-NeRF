@@ -127,7 +127,7 @@ class RenderStateMachine(threading.Thread):
             self.next_action = action
 
         # handle interrupt logic
-        if self.state == "high" and self.next_action.action in ("move", "rerender"):
+        if self.state == "high" and self.next_action.action in ("move",):
             self.interrupt_render_flag = True
         self.render_trigger.set()
 
@@ -230,6 +230,8 @@ class RenderStateMachine(threading.Thread):
                             print("Seach Text Case\n")
                             text_prompt = self.viewer.search_text
                             points = None
+                            threshold = 0.5
+                            topk = 5
                             
                         outputs = self.viewer.get_model().get_outputs_for_camera_ray_bundle(camera_ray_bundle, points=points, intrin=intrinsics_matrix, c2w=camera_to_world, text_prompt=text_prompt, topk=topk, thresh=threshold) 
                         print(outputs.keys())
@@ -255,6 +257,7 @@ class RenderStateMachine(threading.Thread):
             if action is None:
                 continue
             self.next_action = None
+            print(self.state)
             if self.state == "high" and action.action == "static":
                 # if we are in high res and we get a static action, we don't need to do anything
                 # TODO currently a workaround

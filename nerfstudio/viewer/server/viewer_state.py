@@ -195,6 +195,7 @@ class ViewerState:
 
     def _output_type_change(self, _):
         self.output_type_changed = True
+        self.render_statemachine.action(action=RenderAction("rerender", None))
 
     def _interrupt_render(self, _) -> None:
         """Interrupt current render."""
@@ -228,12 +229,12 @@ class ViewerState:
                 self.control_panel.output_render = "rgb"
             self.use_sam = False
         self.use_sam = self.control_panel.use_sam
-        self.render_statemachine.action(action=RenderAction("static", None))
+        self.render_statemachine.action(action=RenderAction("rerender", None))
 
     def _clear_sam_pins(self, _) -> None:
         self.viser_server.clear_sam_pins()
         # self.control_panel.output_render = "rgb"
-        self.render_statemachine.action(action=RenderAction("static", None))
+        self.render_statemachine.action(action=RenderAction("rerender", None))
 
     def _fixed_fps_cb(self, _) -> None:
         self.use_fixed_fps = self.control_panel.use_fixed_fps
@@ -254,7 +255,7 @@ class ViewerState:
         self.text_prompt = self.control_panel.text_prompt
         self.threshold = self.control_panel.threshold
         self.topk = self.control_panel.topk
-        self.render_statemachine.action(action=RenderAction("static", None))
+        self.render_statemachine.action(action=RenderAction("rerender", None))
         
     def _clear_text_prompt(self, _) -> None:
         self.text_prompt = ""
@@ -262,7 +263,7 @@ class ViewerState:
             self.control_panel.output_render = "rgb"
         self.control_panel.text_prompt = ""
         self.use_text_prompt = False
-        self.render_statemachine.action(action=RenderAction("static", None))
+        self.render_statemachine.action(action=RenderAction("rerender", None))
 
     def _handle_training_state_message(self, message: NerfstudioMessage) -> None:
         """Handle training state message from viewer."""
@@ -347,11 +348,12 @@ class ViewerState:
         print("+" * 20)
         if message.switch_to_heat_map:
             print("use heat map")
-            self.render_output_before = self.control_panel.output_render if self.control_panel.output_render != "clipseg_feature" else "rgb"
+            self.render_output_before = self.control_panel.output_render if self.control_panel.output_render != "masked_rgb" else "rgb"
             self.use_search_text = True
             # TODO: add here the real render output for search heatmap
-            self.control_panel.output_render = "clipseg_feature"
+            self.control_panel.output_render = "masked_rgb"
             self.search_text = message.text
+            self.render_statemachine.action(action=RenderAction("rerender", None))
         else:
             # for disable search text and back to the previous mode
             self.use_search_text = False
@@ -359,6 +361,7 @@ class ViewerState:
             print(f"previous render: {self.render_output_before}")
             self.control_panel.output_render = self.render_output_before
             self.search_text = None
+            self.render_statemachine.action(action=RenderAction("rerender", None))
 
     @property
     def training_state(self) -> Literal["training", "paused", "completed"]:
