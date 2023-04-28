@@ -338,6 +338,10 @@ export function get_scene_tree() {
         "renderingState/ys",
         state.ys.concat([mouseY / event.target.clientHeight]),
       );
+      store_dispatch(
+        "renderingState/sam_points_changed",
+        true,
+      );
     }
 
     console.log(state.xs);

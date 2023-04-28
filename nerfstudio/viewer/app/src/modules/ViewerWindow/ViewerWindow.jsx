@@ -126,6 +126,7 @@ export default function ViewerWindow(props) {
 
   const xs = useSelector((state) => state.renderingState.xs);
   const ys = useSelector((state) => state.renderingState.ys);
+  const sam_points_changed = useSelector((state) => state.renderingState.sam_points_changed);
 
   // const search_text = useSelector((state) => state.renderingState.search_text);
 
@@ -328,7 +329,16 @@ export default function ViewerWindow(props) {
       if (is_moving) {
         is_moving = false;
       } else {
-        return;
+        if (sam_points_changed) {
+          dispatch({
+            type: 'write',
+            path: 'renderingState/sam_points_changed',
+            value: false,
+          });
+        }
+        else {
+          return;
+        }
       }
     } else {
       is_moving = true;
