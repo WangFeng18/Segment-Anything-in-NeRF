@@ -75,8 +75,9 @@ yarn start
 
 After compiling, the viewer is available on `<your_machine_ip>:<port>/?websocket_url=ws://localhost:<ws_port>`. By default, `<port>` will be set to 4000, you can change the `PORT` variable to what you need in `nerfstudio/viewer/app/.env.development`. `<ws_port> `is set through `--viewer.websocket_port <ws_port>` in the command line with your NeRF training.
 
+**For a more complete viewer instruction, checkout [here](./nerfstudio/viewer/intructions.md) :hear_no_evil: .**
 
-NOTE: The viewer is currently work in progress, and there may exist tons of bugs. Please let us know if you encounter something unexpected, thanks in advance for you help :smiling_face_with_three_hearts:. 
+NOTE: The viewer is currently work in progress, and there may exist tons of bugs. Please let us know if you encounter something unexpected, thanks in advance for you help :smiling_face_with_three_hearts: . 
 
 
 
