@@ -29,6 +29,7 @@ export default function StatusPanel(props: StatusPanelProps) {
   );
   const step = useSelector((state) => state.renderingState.step);
   const eval_res = useSelector((state) => state.renderingState.eval_res);
+  const real_fps = useSelector((state) => state.renderingState.real_fps);
   const camera_choice = useSelector(
     (state) => state.renderingState.camera_choice,
   );
@@ -144,6 +145,9 @@ export default function StatusPanel(props: StatusPanelProps) {
         </div>
         <div>
           <b>Resolution:</b> {eval_res}
+        </div>
+        <div>
+          <b>FPS:</b> {real_fps.toFixed(2)}
         </div>
       </div>
     </div>

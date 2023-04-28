@@ -530,6 +530,7 @@ class SAMModel(NerfactoModel):
                 outputs["masked_rgb"] = generate_masked_img(self.predictor, input_points, input_label, outputs["rgb"])
                 
                 if self.prompts is not None:
+                    print("Show prompts")
                     outputs["masked_rgb"] = show_prompts(
                         prompts, outputs["depth"], intrin, c2w, outputs["masked_rgb"], self.prompts[legal], h
                     )

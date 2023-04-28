@@ -263,3 +263,12 @@ class TextPromptMessage(NerfstudioMessage):
 @dataclasses.dataclass
 class ThresholdMessage(NerfstudioMessage):
     threshold: float
+
+@dataclasses.dataclass
+class FPSMessage(NerfstudioMessage):
+    fps: float
+    
+@dataclasses.dataclass
+class SearchTextMessage(NerfstudioMessage):
+    text: str
+    switch_to_heat_map: bool

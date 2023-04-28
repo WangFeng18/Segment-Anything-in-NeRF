@@ -13,6 +13,7 @@ import SceneNode from '../../SceneNode';
 import { subscribe_to_changes } from '../../subscriber';
 import { snap_to_camera } from '../SidePanel/SidePanel';
 import store from '../../store'
+import { element } from 'prop-types';
 
 function store_dispatch(path, data) {
   store.dispatch({
@@ -182,8 +183,23 @@ export function get_scene_tree() {
     keyMap[keyCode] = false;
   }
   function onKeyDown(event) {
-    const keyCode = event.code;
-    keyMap[keyCode] = true;
+    element = document.getElementById("search-input");
+    if (element !== document.activeElement) {
+      const keyCode = event.code;
+      keyMap[keyCode] = true;
+    }
+    // console.log(event.ctrlKey)
+    // console.log(event.key);
+    if (event.ctrlKey && event.key === 'f') {
+      event.preventDefault();
+      console.log("in the callback");
+      element = document.getElementById("search-input");
+      console.log(element.style.display);
+      if (element.style.display === 'none') {
+        element.style.display = 'block';
+        element.focus();
+      }
+    }
   }
 
   function checkVisibility(camera) {

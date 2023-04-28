@@ -77,7 +77,7 @@ $custom-border: solid 1px $base-color1;
   overflow-y: scroll;
 }
 
-.Leva-container > div {
+.Leva-container>div {
   position: relative;
   margin: auto;
   width: 100%;
@@ -331,14 +331,14 @@ $sidebar-width: 100% !default;
   float: right;
 }
 
-.CameraList-row-time-interval > div {
+.CameraList-row-time-interval>div {
   display: inline-block;
   text-align: center;
   margin: 10px;
   width: 100px;
 }
 
-.CameraList-row-animation-properties > div {
+.CameraList-row-animation-properties>div {
   display: inline-block;
   text-align: center;
   margin: 10px;
@@ -428,6 +428,137 @@ $viewer_button_size: 50px;
 
 .ViewerWindow-iconbutton {
   margin-top: 5px;
+}
+
+.fade-in {
+  animation: fadeIn 1s;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+#search-input {
+  width: 30%;
+  height: 30px;
+  font-size: 30px;
+  line-height: 1;
+  color: #fff;
+}
+
+.search-input {
+  font-family: Nunito;
+  position: absolute;
+  display: none;
+  z-index: 9999;
+  text-align: center;
+  height: 30px;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%) translateY(50%);
+  width: 30%;
+  padding: 20px;
+  margin: -40 auto 0 auto;
+  // border: 3px solid #73AD21;
+  background-color: #1B1622;
+  border-radius: 25px;
+  box-shadow: 0 10px 20px #09070b, 0 0 0 10px #53577A;
+}
+
+#s-cover {
+  width: 1px;
+  padding-left: 35px;
+}
+
+#ss-button {
+  position: absolute;
+  display: block;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  bottom: 10%;
+  right: 50%;
+}
+
+#s-circle {
+  position: relative;
+  top: -8px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin-top: 0;
+  border-width: 15px;
+  border: 15px solid #fff;
+  background-color: transparent;
+  border-radius: 50%;
+  transition: 0.5s ease all;
+}
+
+#ss-button span {
+  position: relative;
+  top: 68px;
+  left: 43px;
+  display: block;
+  width: 45px;
+  height: 15px;
+  background-color: transparent;
+  border-radius: 10px;
+  transform: rotateZ(52deg);
+  transition: 0.5s ease all;
+}
+
+#ss-button span:before,
+#ss-button span:after {
+  content: "";
+  position: absolute;
+  bottom: 10%;
+  right: 50%;
+  width: 45px;
+  height: 15px;
+  background-color: #fff;
+  border-radius: 10px;
+  transform: rotateZ(0);
+  transition: 0.5s ease all;
+}
+
+#s-cover:hover #s-circle {
+  top: -1px;
+  width: 67px;
+  height: 15px;
+  border-width: 0;
+  background-color: #fff;
+  border-radius: 20px;
+}
+
+#s-cover:hover span {
+  top: 50%;
+  left: 56px;
+  width: 25px;
+  margin-top: -9px;
+  transform: rotateZ(0);
+}
+
+#s-cover:hover button span:before {
+  bottom: 11px;
+  transform: rotateZ(52deg);
+}
+
+#s-cover:hover button span:after {
+  bottom: -11px;
+  transform: rotateZ(-52deg);
+}
+
+#s-cover:hover button span:before,
+#s-cover:hover button span:after {
+  right: -6px;
+  width: 40px;
+  background-color: #fff;
 }
 
 // ------------------------------------
