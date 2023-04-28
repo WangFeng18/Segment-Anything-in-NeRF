@@ -266,8 +266,6 @@ class RenderStateMachine(threading.Thread):
             if action is None:
                 continue
             self.next_action = None
-            print(self.state)
-            print(action.action)
             if self.state == "high" and action.action == "static":
                 # if we are in high res and we get a static action, we don't need to do anything
                 # TODO currently a workaround
