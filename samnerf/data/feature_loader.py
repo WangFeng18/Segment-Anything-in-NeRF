@@ -19,15 +19,11 @@ class FeatureDataloader(ABC):
         patch_size: int = 1,
         get_feature=lambda x: x,
     ):
-        print("====================Image Shape====================")
-        print(image_shape)
-        print("====================Image Shape====================")
         self.device = device
         self.npy_path = npy_paths
         self.image_shape = image_shape
         self.patch_size = patch_size
 
-        print(npy_paths)
         if npy_paths[0].endswith(".npy"):
             features = []
             for npy in npy_paths:

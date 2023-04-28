@@ -11,7 +11,7 @@ from segment_anything import sam_model_registry, SamPredictor
 
 
 def init():
-    sam_checkpoint = "/data/machine/nerfstudio/segment-anything/sam_vit_h_4b8939.pth"
+    sam_checkpoint = "samnerf/segment-anything/sam_vit_h_4b8939.pth"
     model_type = "vit_h"
     device = "cuda"
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
@@ -37,8 +37,8 @@ def get_embeddings(image_path, predictor):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image_path", type=str, default="/data/machine/data/flame_salmon_image/images/")
-    parser.add_argument("--save_path", type=str, default="/data/machine/data/flame_salmon_image/sam_features/")
+    parser.add_argument("--image_path", type=str, default="/data/machine/data/mipnerf360/room/images/")
+    parser.add_argument("--save_path", type=str, default="/data/machine/data/mipnerf360/room/sam_features/")
 
     args = parser.parse_args()
     if not os.path.exists(args.save_path):

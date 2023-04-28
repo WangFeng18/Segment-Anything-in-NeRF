@@ -46,7 +46,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):  # pylint: disable=a
     def open(self, *args: str, **kwargs: str):
         """open websocket bridge"""
         self.bridge.websocket_pool.add(self)
-        print("opened:", self, file=sys.stderr)
         self.bridge.send_scene(self)
 
     async def on_message(self, message: bytearray):  # pylint: disable=invalid-overridden-method
@@ -87,7 +86,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):  # pylint: disable=a
 
     def on_close(self):
         self.bridge.websocket_pool.remove(self)
-        print("closed:", self, file=sys.stderr)
 
 
 class ZMQWebSocketBridge:
@@ -187,7 +185,6 @@ class ZMQWebSocketBridge:
         Args:
             websocket: websocket to send information over
         """
-        print("Sending entire scene state due to websocket connection established.")
         for path, node in walk("", self.state_tree):
             if node.data is not None:
                 command = {"type": "write", "path": path, "data": node.data}

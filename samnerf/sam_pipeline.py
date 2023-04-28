@@ -64,10 +64,6 @@ class SamPipeline(VanillaPipeline):
         # TODO remove it
         if batch["image"].shape[1] == 1297:
             batch["image"] = batch["image"][:, :-1, ...]
-        print(camera_ray_bundle.shape)
-        # print(batch.keys())
-        # print(batch["image_idx"].shape)
-        print(batch["image"].shape)
 
         # global first_time
         # if first_time:
@@ -96,7 +92,6 @@ class SamPipeline(VanillaPipeline):
                 self.train()
                 return metrics_dict, {}
             
-            print("\n\ndebug\n\n")
             points = np.array([[648, 400]])
             intrin = np.zeros([3, 3])
             cam = self.datamanager.eval_dataset.cameras
@@ -113,9 +108,7 @@ class SamPipeline(VanillaPipeline):
 
             camera_type = CameraType.PERSPECTIVE
             for i, t in tqdm(enumerate(ts)):
-                print(t)
                 c2wt = torch.from_numpy(get_c2w_t(c2w, t)).to(torch.float32)
-                print(c2wt)
 
                 camera = Cameras(
                     fx=intrin[0, 0],
