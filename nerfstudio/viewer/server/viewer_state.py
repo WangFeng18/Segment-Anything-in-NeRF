@@ -281,12 +281,17 @@ class ViewerState:
     def _handle_camera_update(self, message: NerfstudioMessage) -> None:
         """Handle camera update message from viewer."""
         assert isinstance(message, CameraMessage)
-        self.camera_message = message
         if message.is_moving:
+            self.camera_message = message
             self.render_statemachine.action(RenderAction("move", self.camera_message))
             if self.training_state == "training":
                 self.training_state = "paused"
         else:
+            if self.camera_message is not None:
+                if len(self.camera_message.xs) != len(message.xs):
+                    self.camera_message = message
+                    self.render_statemachine.action(RenderAction("rerender", self.camera_message))
+            self.camera_message = message
             self.render_statemachine.action(RenderAction("static", self.camera_message))
             self.training_state = self.train_btn_state
 
