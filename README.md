@@ -1,11 +1,10 @@
 ## SAM-NeRF: A Simple Baseline for Segmenting Anything in NeRF with Language Prompts.
 
 
-### SAM with Language prompts:
-https://user-images.githubusercontent.com/43294876/235158631-c2384188-81cb-40f9-a7e4-e635c9912c8c.mp4
+https://user-images.githubusercontent.com/43294876/235251968-4b9103ee-a6ca-4406-b8b0-7c0d95e097be.mp4
 
-### Promptable Segmentation for NeRF
-https://user-images.githubusercontent.com/43294876/235242529-16e224c2-6219-432c-8537-f821408f0533.mp4
+
+https://user-images.githubusercontent.com/43294876/235252013-b6977241-d9af-4dfd-bb2d-d21f30391057.mp4
 
 ## Intro
 This repo provides a support of language prompts for SAM, by combinning ClipSeg and SAM. We also provides a simple baseline for connecting SAM with NeRF, as well as a simple SAM feature distillation method. Specifically, we provide:
