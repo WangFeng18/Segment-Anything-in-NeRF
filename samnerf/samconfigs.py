@@ -69,7 +69,7 @@ method_configs["samnerf_no_distill"] = TrainerConfig(
             camera_optimizer=CameraOptimizerConfig(
                 mode="off",
             ),
-            patch_size=4,
+            patch_size=1,
             distill_sam=False,
         ),
         model=SAMModelConfig(
@@ -79,7 +79,7 @@ method_configs["samnerf_no_distill"] = TrainerConfig(
             eval_num_rays_per_chunk=1 << 15,
             use_appearance_embedding=False,
             hidden_layers=1,
-            patch_size=4,
+            patch_size=1,
             sam_loss_weight=1.0,
             num_proposal_iterations=1,
             num_proposal_samples_per_ray=(64,),
