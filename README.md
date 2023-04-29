@@ -92,7 +92,7 @@ We provide the usage of language promptable SAM in samclip.ipynb, and provide a 
 #### 2. Segment Anything in NeRF
 ```
 # data pre-processing, get the json files for training nerf in nerfstudio
-bash samnerf/preprocessing/mipnerf350.sh json
+bash samnerf/preprocessing/mipnerf360.sh json
 ```
 
 Without 3D feature distillation
@@ -103,7 +103,7 @@ python -m samnerf.train samnerf.train samnerf_no_distill --vis viewer+wandb --vi
 With 3D feature distillation, this method will distill the feature of SAM encoder into a 3D feature fields. The image encoding process is replaced by a volumetric rendering.
 ```bash
 # first extract the features of SAM encoder and ClipSeg features
-bash samnerf/preprocessing/mipnerf350.sh feature
+bash samnerf/preprocessing/mipnerf360.sh feature
 # training nerf
 python -m samnerf.train samnerf.train samnerf_distill --vis viewer+wandb --viewer.websocket-port 7007
 ```
