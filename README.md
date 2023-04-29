@@ -13,8 +13,8 @@ This repository provides language prompt support for SAM through a combination o
 
 > - An extension of Segment Anything for incorporating language prompts by combining ClipSeg with SAM. The inference of ClipSeg features is fast, taking only 0.04s per image and causing negligible overhead.
 > - An implementation of combining Segment Anything with NeRF, allowing for locking 3D objects for different views and segmentation in 3D by language and point prompts.
-> - An implementation of distilling SAM and ClipSeg features into 3D fields. In this pipeline, the image encoders of SAM and ClipSeg are replaced by a volumetric rendering process, significantly reducing the time of image encoding. The acceleration mainly comes from the much lower rendering resolutions, we believe the image encoder will give much acceleration and better results through reducing the input image size. We use a patch-based rendering and aggregate neighboring features to make up for the loss of inner-interactions of patches, improving the mask qualities.
-> - A viewer for visualizing trained SAM-NeRF. This viewer allows users to lock onto a certain 3D object via clicking or providing text prompt. For language prompts, the viewer can also search objects by text and provide a heatmap indicating pixel-level relevance.
+> - An implementation of distilling SAM and ClipSeg features into 3D fields. In this pipeline, the image encoders of SAM and ClipSeg are replaced by a volumetric rendering process, significantly reducing the time of image encoding. The acceleration mainly comes from the much lower rendering resolutions, we believe the image encoder will give more acceleration and better results through reducing the input image size. We use a patch-based rendering and aggregate neighboring features to make up for the loss of inner-interactions of patches, improving the mask qualities.
+> - A viewer for visualizing the trained SAM-NeRF. This viewer allows users to lock onto a certain 3D object via clicking or providing text prompt. For language prompts, the viewer can also search objects by text and provide a heatmap indicating pixel-level relevance.
 
 
 ## Install
@@ -63,7 +63,7 @@ Install `viser` via
 pip install viser
 ```
 
-and make sure `node.js` and `yarn` are available on your machine. Refer to [this](https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-20-04) if you do not how to install.
+and make sure `node.js` and `yarn` are available on your machine. Refer to [this](https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-20-04) if you are not clear about how to install.
 
 
 
@@ -79,7 +79,7 @@ After compiling, the viewer is available on `<your_machine_ip>:<port>/?websocket
 
 **For a more complete viewer instruction, checkout [here](./nerfstudio/viewer/intructions.md) :hear_no_evil: .**
 
-NOTE: The viewer is currently work in progress, and there may exist tons of bugs. Please let us know if you encounter something unexpected, thanks in advance for you help :smiling_face_with_three_hearts: . 
+NOTE: The viewer is currently work in progress, and there may exist some bugs. Please let us know if you encounter something unexpected, thanks in advance for you help :smiling_face_with_three_hearts: . 
 
 
 
